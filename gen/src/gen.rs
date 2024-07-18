@@ -929,7 +929,7 @@ pub fn wrt_fle_svgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
         let canvas = skia_safe::svg::Canvas::new(Rect::from_size(size), None);
         canvas.draw_str(name, (mrg, size.height - rect.bottom), font, &paint1);
         let data = canvas.end();
-        fs::write(format!("../imgs/{}.svg", fnt.borrow().variant), data.as_bytes())?;
+        fs::write(format!("../doc/imgs/{}.svg", fnt.borrow().variant), data.as_bytes())?;
     }
 
     Ok(())
