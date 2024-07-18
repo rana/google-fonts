@@ -12,83 +12,83 @@ use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
 pub enum Font {
         /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _regular_ font.
     ///
-    /// ![ABeeZee Regular](../doc/ABeeZeeRegular.svg)
+    /// ![ABeeZee Regular](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeRegular.svg)
     ABeeZeeRegular = Family::ABeeZee as isize,
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _italic_ font.
     ///
-    /// ![ABeeZee Italic](../doc/ABeeZeeItalic.svg)
+    /// ![ABeeZee Italic](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeItalic.svg)
     ABeeZeeItalic = 1 + Family::ABeeZee as isize,
     /// The [ADLaM Display](https://fonts.google.com/specimen/ADLaM+Display) _regular_ font.
     ///
-    /// ![ADLaMDisplay Regular](../doc/ADLaMDisplayRegular.svg)
+    /// ![ADLaMDisplay Regular](https://rana.github.io/google-fonts/doc/imgs/ADLaMDisplayRegular.svg)
     ADLaMDisplayRegular = Family::ADLaMDisplay as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _regular_ font.
     ///
-    /// ![AROneSans Regular](../doc/AROneSansRegular.svg)
+    /// ![AROneSans Regular](https://rana.github.io/google-fonts/doc/imgs/AROneSansRegular.svg)
     AROneSansRegular = Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _medium_ font.
     ///
-    /// ![AROneSans Medium](../doc/AROneSansMedium.svg)
+    /// ![AROneSans Medium](https://rana.github.io/google-fonts/doc/imgs/AROneSansMedium.svg)
     AROneSansMedium = 1 + Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _semi bold_ font.
     ///
-    /// ![AROneSans SemiBold](../doc/AROneSansSemiBold.svg)
+    /// ![AROneSans SemiBold](https://rana.github.io/google-fonts/doc/imgs/AROneSansSemiBold.svg)
     AROneSansSemiBold = 2 + Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _bold_ font.
     ///
-    /// ![AROneSans Bold](../doc/AROneSansBold.svg)
+    /// ![AROneSans Bold](https://rana.github.io/google-fonts/doc/imgs/AROneSansBold.svg)
     AROneSansBold = 3 + Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _variable_ font.
     ///
-    /// ![AROneSans Variable](../doc/AROneSansVariable.svg)
+    /// ![AROneSans Variable](https://rana.github.io/google-fonts/doc/imgs/AROneSansVariable.svg)
     AROneSansVariable = 4 + Family::AROneSans as isize,
     /// The [Abel](https://fonts.google.com/specimen/Abel) _regular_ font.
     ///
-    /// ![Abel Regular](../doc/AbelRegular.svg)
+    /// ![Abel Regular](https://rana.github.io/google-fonts/doc/imgs/AbelRegular.svg)
     AbelRegular = Family::Abel as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _regular_ font.
     ///
-    /// ![AbhayaLibre Regular](../doc/AbhayaLibreRegular.svg)
+    /// ![AbhayaLibre Regular](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreRegular.svg)
     AbhayaLibreRegular = Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _medium_ font.
     ///
-    /// ![AbhayaLibre Medium](../doc/AbhayaLibreMedium.svg)
+    /// ![AbhayaLibre Medium](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreMedium.svg)
     AbhayaLibreMedium = 1 + Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _semi bold_ font.
     ///
-    /// ![AbhayaLibre SemiBold](../doc/AbhayaLibreSemiBold.svg)
+    /// ![AbhayaLibre SemiBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreSemiBold.svg)
     AbhayaLibreSemiBold = 2 + Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _bold_ font.
     ///
-    /// ![AbhayaLibre Bold](../doc/AbhayaLibreBold.svg)
+    /// ![AbhayaLibre Bold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreBold.svg)
     AbhayaLibreBold = 3 + Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _extra bold_ font.
     ///
-    /// ![AbhayaLibre ExtraBold](../doc/AbhayaLibreExtraBold.svg)
+    /// ![AbhayaLibre ExtraBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreExtraBold.svg)
     AbhayaLibreExtraBold = 4 + Family::AbhayaLibre as isize,
     /// The [Aboreto](https://fonts.google.com/specimen/Aboreto) _regular_ font.
     ///
-    /// ![Aboreto Regular](../doc/AboretoRegular.svg)
+    /// ![Aboreto Regular](https://rana.github.io/google-fonts/doc/imgs/AboretoRegular.svg)
     AboretoRegular = Family::Aboreto as isize,
     /// The [Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface) _regular_ font.
     ///
-    /// ![AbrilFatface Regular](../doc/AbrilFatfaceRegular.svg)
+    /// ![AbrilFatface Regular](https://rana.github.io/google-fonts/doc/imgs/AbrilFatfaceRegular.svg)
     AbrilFatfaceRegular = Family::AbrilFatface as isize,
     /// The [Abyssinica SIL](https://fonts.google.com/specimen/Abyssinica+SIL) _regular_ font.
     ///
-    /// ![AbyssinicaSIL Regular](../doc/AbyssinicaSILRegular.svg)
+    /// ![AbyssinicaSIL Regular](https://rana.github.io/google-fonts/doc/imgs/AbyssinicaSILRegular.svg)
     AbyssinicaSILRegular = Family::AbyssinicaSIL as isize,
     /// The [Aclonica](https://fonts.google.com/specimen/Aclonica) _regular_ font.
     ///
-    /// ![Aclonica Regular](../doc/AclonicaRegular.svg)
+    /// ![Aclonica Regular](https://rana.github.io/google-fonts/doc/imgs/AclonicaRegular.svg)
     AclonicaRegular = Family::Aclonica as isize,
     /// The [Acme](https://fonts.google.com/specimen/Acme) _regular_ font.
     ///
-    /// ![Acme Regular](../doc/AcmeRegular.svg)
+    /// ![Acme Regular](https://rana.github.io/google-fonts/doc/imgs/AcmeRegular.svg)
     AcmeRegular = Family::Acme as isize,
     /// The [Actor](https://fonts.google.com/specimen/Actor) _regular_ font.
     ///
-    /// ![Actor Regular](../doc/ActorRegular.svg)
+    /// ![Actor Regular](https://rana.github.io/google-fonts/doc/imgs/ActorRegular.svg)
     ActorRegular = Family::Actor as isize,
 }
 

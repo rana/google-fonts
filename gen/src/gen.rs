@@ -351,8 +351,9 @@ pub enum Font {
             fnt.borrow().name_suffix()
         ));
         buf.push_str("    ///\n");
+        //
         buf.push_str(&format!(
-            "    /// ![{}](../doc/{}.svg)\n",
+            "    /// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.svg)\n",
             fnt.borrow().name,
             fnt.borrow().variant
         ));
@@ -910,26 +911,46 @@ use crate::error::FontError;
 }
 
 pub fn wrt_fle_svgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
+    let mut pth = PathBuf::from("../doc/imgs");
+
+    // Re-create image directory.
+    // Ensure we don't keep images for deleted fonts.
+    if pth.exists() {
+        fs::remove_dir_all(&pth)?;
+    }
+    fs::create_dir_all(&pth)?;
+
     let mgr = FontMgr::new();
     let mut paint1 = Paint::default();
     paint1.set_color(Color::from_rgb(255, 255, 255));
     for fnt in fnts.iter() {
+        // Get font.
         let fnt_dat = fnt.borrow().get(cli)?;
         let face = mgr.new_from_data(&fnt_dat, None).unwrap();
         let font = &Font::from_typeface(face, 18.0);
         let name = &fnt.borrow().name;
+
+        // Measure font.
         let (_, mut rect) = font.measure_str(name, Some(&paint1));
         let mrg: f32 = 3.0;
+
+        // Add margin to image.
         rect.left -= mrg;
         rect.right += mrg;
         rect.bottom += mrg;
         rect.top -= mrg;
+
+        // Draw image.
         let size = rect.size();
-        // eprintln!("{:?} {:?}", rect, size);
         let canvas = skia_safe::svg::Canvas::new(Rect::from_size(size), None);
         canvas.draw_str(name, (mrg, size.height - rect.bottom), font, &paint1);
         let data = canvas.end();
-        fs::write(format!("../doc/imgs/{}.svg", fnt.borrow().variant), data.as_bytes())?;
+
+        // Save file.
+        pth.push(&fnt.borrow().variant);
+        pth.set_extension("svg");
+        fs::write(&pth, data.as_bytes())?;
+        pth.pop();
     }
 
     Ok(())
