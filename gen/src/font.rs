@@ -1,4 +1,3 @@
-
 use crate::category::Category;
 use crate::error::{FontError, StringError};
 use crate::family::{Family, ID_INCREMENT};
@@ -8,11 +7,35 @@ use std::fs;
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
 
 /// An _enumeration_ of [Google fonts](https://fonts.google.com).
-#[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+#[derive(
+    Debug,
+    Display,
+    Clone,
+    Copy,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Serialize,
+    Deserialize,
+    EnumCount,
+    EnumIter,
+    EnumString,
+    AsRefStr,
+)]
 pub enum Font {
-        /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _regular_ font.
+    /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _regular_ font.
     ///
     /// ![ABeeZee Regular](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeRegular.svg)
+    /// 
+    /// ```html
+    /// <link rel="stylesheet" href="[https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap](https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap)">
+    /// ```
+    ///
+    /// This would allow you to style text using the `Open Sans` webfont.
+    ///
+    /// ```html
+    /// <p style="font-family: 'Open Sans', sans-serif;">This text uses the Open Sans webfont.</p>
     ABeeZeeRegular = Family::ABeeZee as isize,
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _italic_ font.
     ///
@@ -105,13 +128,13 @@ impl Font {
 
     /// Returns the index of the font file within the [`Family`].
     pub fn font_file_idx(&self) -> usize {
-         (self.id() - self.family().id()) as usize 
+        (self.id() - self.family().id()) as usize
     }
 
     /// Returns the name of the [`Font`].
     pub fn name(&self) -> String {
         self.as_ref().into()
-    }    
+    }
 
     /// Indicates whether the [`Font`] uses _variable_ font technology.
     pub fn is_variable(&self) -> bool {
@@ -286,4 +309,3 @@ pub struct Manifest {
 pub struct FileRef {
     url: String,
 }
-    

@@ -15,7 +15,7 @@ use std::{
 pub const FAMILY: &str = "Family";
 pub const FONT: &str = "Font";
 pub const CATEGORY: &str = "Category";
-pub const TAKE: usize = 11; //usize::MAX;
+pub const TAKE: usize = 11;//usize::MAX;
 pub const FAMILY_ID_INCREMENT: u32 = 1000; // The Roboto Serif font family has 721 fonts.
 
 #[derive(Debug, Clone)]
@@ -71,6 +71,12 @@ pub fn build(file_path: &str, is_in_prj_gen: bool) -> Result<()> {
             })
         })
         .collect();
+
+    // // Create subset list.
+    // let mut subsets: Vec<String> = fam_metas.iter().flat_map(|o| o.subsets.clone()).collect();
+    // subsets.sort_unstable();
+    // subsets.dedup();
+    // eprintln!("subsets {:?}", subsets);
 
     // Create families list.
     let mut fams: Vec<Rc<RefCell<Fam>>> = Vec::with_capacity(fam_metas.len());
