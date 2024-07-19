@@ -31,24 +31,35 @@ impl Category {
         match self {
             Category::Display => {
                 vec![
+                    #[cfg(feature = "static")]
                     Family::ADLaMDisplay,
+                    #[cfg(feature = "static")]
                     Family::Aboreto,
+                    #[cfg(feature = "static")]
                     Family::AbrilFatface,
                 ]
             }
             Category::SansSerif => {
                 vec![
+                    #[cfg(feature = "static")]
                     Family::ABeeZee,
+                    #[cfg(any(feature = "variable", feature = "static"))]
                     Family::AROneSans,
+                    #[cfg(feature = "static")]
                     Family::Abel,
+                    #[cfg(feature = "static")]
                     Family::Aclonica,
+                    #[cfg(feature = "static")]
                     Family::Acme,
+                    #[cfg(feature = "static")]
                     Family::Actor,
                 ]
             }
             Category::Serif => {
                 vec![
+                    #[cfg(feature = "static")]
                     Family::AbhayaLibre,
+                    #[cfg(feature = "static")]
                     Family::AbyssinicaSIL,
                 ]
             }
@@ -60,33 +71,53 @@ impl Category {
         match self {
             Category::Display => {
                 vec![
+                    #[cfg(feature = "static")]
                     Font::ADLaMDisplayRegular,
+                    #[cfg(feature = "static")]
                     Font::AboretoRegular,
+                    #[cfg(feature = "static")]
                     Font::AbrilFatfaceRegular,
                 ]
             }
             Category::SansSerif => {
                 vec![
+                    #[cfg(feature = "static")]
                     Font::ABeeZeeRegular,
+                    #[cfg(feature = "static")]
                     Font::ABeeZeeItalic,
+                    #[cfg(feature = "static")]
                     Font::AROneSansRegular,
+                    #[cfg(feature = "static")]
                     Font::AROneSansMedium,
+                    #[cfg(feature = "static")]
                     Font::AROneSansSemiBold,
+                    #[cfg(feature = "static")]
                     Font::AROneSansBold,
+                    #[cfg(feature = "variable")]
                     Font::AROneSansVariable,
+                    #[cfg(feature = "static")]
                     Font::AbelRegular,
+                    #[cfg(feature = "static")]
                     Font::AclonicaRegular,
+                    #[cfg(feature = "static")]
                     Font::AcmeRegular,
+                    #[cfg(feature = "static")]
                     Font::ActorRegular,
                 ]
             }
             Category::Serif => {
                 vec![
+                    #[cfg(feature = "static")]
                     Font::AbhayaLibreRegular,
+                    #[cfg(feature = "static")]
                     Font::AbhayaLibreMedium,
+                    #[cfg(feature = "static")]
                     Font::AbhayaLibreSemiBold,
+                    #[cfg(feature = "static")]
                     Font::AbhayaLibreBold,
+                    #[cfg(feature = "static")]
                     Font::AbhayaLibreExtraBold,
+                    #[cfg(feature = "static")]
                     Font::AbyssinicaSILRegular,
                 ]
             }

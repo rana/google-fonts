@@ -1,3 +1,4 @@
+
 use crate::category::Category;
 use crate::error::{FontError, StringError};
 use crate::family::{Family, ID_INCREMENT};
@@ -7,111 +8,107 @@ use std::fs;
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
 
 /// An _enumeration_ of [Google fonts](https://fonts.google.com).
-#[derive(
-    Debug,
-    Display,
-    Clone,
-    Copy,
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    Serialize,
-    Deserialize,
-    EnumCount,
-    EnumIter,
-    EnumString,
-    AsRefStr,
-)]
+#[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
 pub enum Font {
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _regular_ font.
     ///
     /// ![ABeeZee Regular](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeRegular.svg)
-    /// 
-    /// ```html
-    /// <link rel="stylesheet" href="[https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap](https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap)">
-    /// ```
-    ///
-    /// This would allow you to style text using the `Open Sans` webfont.
-    ///
-    /// ```html
-    /// <p style="font-family: 'Open Sans', sans-serif;">This text uses the Open Sans webfont.</p>
+    #[cfg(feature = "static")]
     ABeeZeeRegular = Family::ABeeZee as isize,
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _italic_ font.
     ///
     /// ![ABeeZee Italic](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeItalic.svg)
+    #[cfg(feature = "static")]
     ABeeZeeItalic = 1 + Family::ABeeZee as isize,
     /// The [ADLaM Display](https://fonts.google.com/specimen/ADLaM+Display) _regular_ font.
     ///
     /// ![ADLaMDisplay Regular](https://rana.github.io/google-fonts/doc/imgs/ADLaMDisplayRegular.svg)
+    #[cfg(feature = "static")]
     ADLaMDisplayRegular = Family::ADLaMDisplay as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _regular_ font.
     ///
     /// ![AROneSans Regular](https://rana.github.io/google-fonts/doc/imgs/AROneSansRegular.svg)
+    #[cfg(feature = "static")]
     AROneSansRegular = Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _medium_ font.
     ///
     /// ![AROneSans Medium](https://rana.github.io/google-fonts/doc/imgs/AROneSansMedium.svg)
+    #[cfg(feature = "static")]
     AROneSansMedium = 1 + Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _semi bold_ font.
     ///
     /// ![AROneSans SemiBold](https://rana.github.io/google-fonts/doc/imgs/AROneSansSemiBold.svg)
+    #[cfg(feature = "static")]
     AROneSansSemiBold = 2 + Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _bold_ font.
     ///
     /// ![AROneSans Bold](https://rana.github.io/google-fonts/doc/imgs/AROneSansBold.svg)
+    #[cfg(feature = "static")]
     AROneSansBold = 3 + Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _variable_ font.
     ///
     /// ![AROneSans Variable](https://rana.github.io/google-fonts/doc/imgs/AROneSansVariable.svg)
+    #[cfg(feature = "variable")]
     AROneSansVariable = 4 + Family::AROneSans as isize,
     /// The [Abel](https://fonts.google.com/specimen/Abel) _regular_ font.
     ///
     /// ![Abel Regular](https://rana.github.io/google-fonts/doc/imgs/AbelRegular.svg)
+    #[cfg(feature = "static")]
     AbelRegular = Family::Abel as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _regular_ font.
     ///
     /// ![AbhayaLibre Regular](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreRegular.svg)
+    #[cfg(feature = "static")]
     AbhayaLibreRegular = Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _medium_ font.
     ///
     /// ![AbhayaLibre Medium](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreMedium.svg)
+    #[cfg(feature = "static")]
     AbhayaLibreMedium = 1 + Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _semi bold_ font.
     ///
     /// ![AbhayaLibre SemiBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreSemiBold.svg)
+    #[cfg(feature = "static")]
     AbhayaLibreSemiBold = 2 + Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _bold_ font.
     ///
     /// ![AbhayaLibre Bold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreBold.svg)
+    #[cfg(feature = "static")]
     AbhayaLibreBold = 3 + Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _extra bold_ font.
     ///
     /// ![AbhayaLibre ExtraBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreExtraBold.svg)
+    #[cfg(feature = "static")]
     AbhayaLibreExtraBold = 4 + Family::AbhayaLibre as isize,
     /// The [Aboreto](https://fonts.google.com/specimen/Aboreto) _regular_ font.
     ///
     /// ![Aboreto Regular](https://rana.github.io/google-fonts/doc/imgs/AboretoRegular.svg)
+    #[cfg(feature = "static")]
     AboretoRegular = Family::Aboreto as isize,
     /// The [Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface) _regular_ font.
     ///
     /// ![AbrilFatface Regular](https://rana.github.io/google-fonts/doc/imgs/AbrilFatfaceRegular.svg)
+    #[cfg(feature = "static")]
     AbrilFatfaceRegular = Family::AbrilFatface as isize,
     /// The [Abyssinica SIL](https://fonts.google.com/specimen/Abyssinica+SIL) _regular_ font.
     ///
     /// ![AbyssinicaSIL Regular](https://rana.github.io/google-fonts/doc/imgs/AbyssinicaSILRegular.svg)
+    #[cfg(feature = "static")]
     AbyssinicaSILRegular = Family::AbyssinicaSIL as isize,
     /// The [Aclonica](https://fonts.google.com/specimen/Aclonica) _regular_ font.
     ///
     /// ![Aclonica Regular](https://rana.github.io/google-fonts/doc/imgs/AclonicaRegular.svg)
+    #[cfg(feature = "static")]
     AclonicaRegular = Family::Aclonica as isize,
     /// The [Acme](https://fonts.google.com/specimen/Acme) _regular_ font.
     ///
     /// ![Acme Regular](https://rana.github.io/google-fonts/doc/imgs/AcmeRegular.svg)
+    #[cfg(feature = "static")]
     AcmeRegular = Family::Acme as isize,
     /// The [Actor](https://fonts.google.com/specimen/Actor) _regular_ font.
     ///
     /// ![Actor Regular](https://rana.github.io/google-fonts/doc/imgs/ActorRegular.svg)
+    #[cfg(feature = "static")]
     ActorRegular = Family::Actor as isize,
 }
 
@@ -128,13 +125,13 @@ impl Font {
 
     /// Returns the index of the font file within the [`Family`].
     pub fn font_file_idx(&self) -> usize {
-        (self.id() - self.family().id()) as usize
+         (self.id() - self.family().id()) as usize 
     }
 
     /// Returns the name of the [`Font`].
     pub fn name(&self) -> String {
         self.as_ref().into()
-    }
+    }    
 
     /// Indicates whether the [`Font`] uses _variable_ font technology.
     pub fn is_variable(&self) -> bool {
@@ -242,25 +239,45 @@ impl Font {
     /// Converts an `isize` to a [`Font`].
     pub fn from_id(id: isize) -> Option<Self> {
         match id {
+            #[cfg(feature = "static")]
             0 => Some(Font::ABeeZeeRegular),
+            #[cfg(feature = "static")]
             1 => Some(Font::ABeeZeeItalic),
+            #[cfg(feature = "static")]
             1000 => Some(Font::ADLaMDisplayRegular),
+            #[cfg(feature = "static")]
             2000 => Some(Font::AROneSansRegular),
+            #[cfg(feature = "static")]
             2001 => Some(Font::AROneSansMedium),
+            #[cfg(feature = "static")]
             2002 => Some(Font::AROneSansSemiBold),
+            #[cfg(feature = "static")]
             2003 => Some(Font::AROneSansBold),
+            #[cfg(feature = "variable")]
             2004 => Some(Font::AROneSansVariable),
+            #[cfg(feature = "static")]
             3000 => Some(Font::AbelRegular),
+            #[cfg(feature = "static")]
             4000 => Some(Font::AbhayaLibreRegular),
+            #[cfg(feature = "static")]
             4001 => Some(Font::AbhayaLibreMedium),
+            #[cfg(feature = "static")]
             4002 => Some(Font::AbhayaLibreSemiBold),
+            #[cfg(feature = "static")]
             4003 => Some(Font::AbhayaLibreBold),
+            #[cfg(feature = "static")]
             4004 => Some(Font::AbhayaLibreExtraBold),
+            #[cfg(feature = "static")]
             5000 => Some(Font::AboretoRegular),
+            #[cfg(feature = "static")]
             6000 => Some(Font::AbrilFatfaceRegular),
+            #[cfg(feature = "static")]
             7000 => Some(Font::AbyssinicaSILRegular),
+            #[cfg(feature = "static")]
             8000 => Some(Font::AclonicaRegular),
+            #[cfg(feature = "static")]
             9000 => Some(Font::AcmeRegular),
+            #[cfg(feature = "static")]
             10000 => Some(Font::ActorRegular),
             _ => None,
         }
@@ -268,25 +285,45 @@ impl Font {
     /// Returns the font [`Category`].
     pub fn category(&self) -> Category {
         match self {
+            #[cfg(feature = "static")]
             Font::ABeeZeeRegular => Category::SansSerif,
+            #[cfg(feature = "static")]
             Font::ABeeZeeItalic => Category::SansSerif,
+            #[cfg(feature = "static")]
             Font::ADLaMDisplayRegular => Category::Display,
+            #[cfg(feature = "static")]
             Font::AROneSansRegular => Category::SansSerif,
+            #[cfg(feature = "static")]
             Font::AROneSansMedium => Category::SansSerif,
+            #[cfg(feature = "static")]
             Font::AROneSansSemiBold => Category::SansSerif,
+            #[cfg(feature = "static")]
             Font::AROneSansBold => Category::SansSerif,
+            #[cfg(feature = "variable")]
             Font::AROneSansVariable => Category::SansSerif,
+            #[cfg(feature = "static")]
             Font::AbelRegular => Category::SansSerif,
+            #[cfg(feature = "static")]
             Font::AbhayaLibreRegular => Category::Serif,
+            #[cfg(feature = "static")]
             Font::AbhayaLibreMedium => Category::Serif,
+            #[cfg(feature = "static")]
             Font::AbhayaLibreSemiBold => Category::Serif,
+            #[cfg(feature = "static")]
             Font::AbhayaLibreBold => Category::Serif,
+            #[cfg(feature = "static")]
             Font::AbhayaLibreExtraBold => Category::Serif,
+            #[cfg(feature = "static")]
             Font::AboretoRegular => Category::Display,
+            #[cfg(feature = "static")]
             Font::AbrilFatfaceRegular => Category::Display,
+            #[cfg(feature = "static")]
             Font::AbyssinicaSILRegular => Category::Serif,
+            #[cfg(feature = "static")]
             Font::AclonicaRegular => Category::SansSerif,
+            #[cfg(feature = "static")]
             Font::AcmeRegular => Category::SansSerif,
+            #[cfg(feature = "static")]
             Font::ActorRegular => Category::SansSerif,
         }
     }
@@ -309,3 +346,4 @@ pub struct Manifest {
 pub struct FileRef {
     url: String,
 }
+    
