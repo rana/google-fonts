@@ -19,7 +19,7 @@ authors = ["Rana Ian"]
 repository = "https://github.com/rana/google-fonts"
 license = "MIT"
 readme = "../README.md"
-description = "Download and cache TTF fonts from Google using Rust."
+description = "Download and cache TTF fonts from Google."
 
 [dependencies]
 dirs = "5.0.1"
