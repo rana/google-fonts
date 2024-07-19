@@ -2,7 +2,7 @@ use anyhow::Result;
 use heck::ToTitleCase;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
-use skia_safe::{Color, Font, FontMgr, Paint, Rect};
+use skia_safe::{surfaces, Color, EncodedImageFormat, Font, FontMgr, Paint, Rect};
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -146,7 +146,7 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
     let suffix = if is_in_prj_gen { "2" } else { "" };
     fs::write(format!("{}lib{}.rs", pth, suffix), buf)?;
 
-    // wrt_fle_svgs(&fnts, &cli)?;
+    wrt_fle_imgs(&fnts, &cli)?;
 
     wrt_fle_cargo_toml(pth)?;
 
@@ -272,7 +272,10 @@ pub const ID_INCREMENT: isize = 1000;
         ));
         buf.push_str("                vec![\n");
         for fnt in fam.borrow().fnts.iter() {
-            buf.push_str(&cfg_feature("                    ", fnt.borrow().features()));
+            buf.push_str(&cfg_feature(
+                "                    ",
+                fnt.borrow().features(),
+            ));
             buf.push_str(&format!(
                 "                    {}::{},\n",
                 FONT,
@@ -346,7 +349,7 @@ pub enum Font {
         ));
         buf.push_str("    ///\n");
         buf.push_str(&format!(
-            "    /// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.svg)\n",
+            "    /// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.webp)\n",
             fnt.borrow().name,
             fnt.borrow().variant
         ));
@@ -638,7 +641,10 @@ use crate::font::Font;
         ));
         buf.push_str("                vec![\n");
         for fam in cat.borrow().fams.iter() {
-            buf.push_str(&cfg_feature("                    ", fam.borrow().features()));
+            buf.push_str(&cfg_feature(
+                "                    ",
+                fam.borrow().features(),
+            ));
             buf.push_str(&format!(
                 "                    {}::{},\n",
                 FAMILY,
@@ -664,7 +670,10 @@ use crate::font::Font;
         ));
         buf.push_str("                vec![\n");
         for fnt in cat.borrow().fnts.iter() {
-            buf.push_str(&cfg_feature("                    ", fnt.borrow().features()));
+            buf.push_str(&cfg_feature(
+                "                    ",
+                fnt.borrow().features(),
+            ));
             buf.push_str(&format!(
                 "                    {}::{},\n",
                 FONT,
@@ -915,7 +924,7 @@ use crate::error::FontError;
     buf.push_str("}\n"); // end mod tests
 }
 
-pub fn wrt_fle_svgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
+pub fn wrt_fle_imgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
     let mut pth = PathBuf::from("../doc/imgs");
 
     // Re-create image directory.
@@ -927,7 +936,9 @@ pub fn wrt_fle_svgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
 
     let mgr = FontMgr::new();
     let mut paint1 = Paint::default();
-    paint1.set_color(Color::from_rgb(255, 255, 255));
+    paint1
+        .set_color(Color::from_rgb(255, 255, 255))
+        .set_anti_alias(false);
     for fnt in fnts.iter() {
         // Get font.
         let fnt_dat = fnt.borrow().get(cli)?;
@@ -946,14 +957,26 @@ pub fn wrt_fle_svgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
         rect.top -= mrg;
 
         // Draw image.
-        let size = rect.size();
-        let canvas = skia_safe::svg::Canvas::new(Rect::from_size(size), None);
-        canvas.draw_str(name, (mrg, size.height - rect.bottom), font, &paint1);
-        let data = canvas.end();
+        // let size = rect.size();
+        // let canvas = skia_safe::svg::Canvas::new(Rect::from_size(size), None);
+        // canvas.draw_str(name, (mrg, size.height - rect.bottom), font, &paint1);
+        // let data = canvas.end();
+        let size = (rect.size().width as i32, rect.size().height as i32);
+        let mut surface = surfaces::raster_n32_premul(size).unwrap();
+        let canvas = surface.canvas();
+        canvas.draw_str(name, (mrg, rect.size().height - rect.bottom), font, &paint1);
+        let image = surface.image_snapshot();
+        let data = image
+            .encode(
+                &mut surface.direct_context(),
+                EncodedImageFormat::WEBP,
+                Some(u32::MAX),
+            )
+            .unwrap();
 
         // Save file.
         pth.push(&fnt.borrow().variant);
-        pth.set_extension("svg");
+        pth.set_extension("webp");
         fs::write(&pth, data.as_bytes())?;
         pth.pop();
     }

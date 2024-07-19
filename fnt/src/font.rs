@@ -12,102 +12,102 @@ use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
 pub enum Font {
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _regular_ font.
     ///
-    /// ![ABeeZee Regular](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeRegular.svg)
+    /// ![ABeeZee Regular](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeRegular.webp)
     #[cfg(feature = "static")]
     ABeeZeeRegular = Family::ABeeZee as isize,
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _italic_ font.
     ///
-    /// ![ABeeZee Italic](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeItalic.svg)
+    /// ![ABeeZee Italic](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeItalic.webp)
     #[cfg(feature = "static")]
     ABeeZeeItalic = 1 + Family::ABeeZee as isize,
     /// The [ADLaM Display](https://fonts.google.com/specimen/ADLaM+Display) _regular_ font.
     ///
-    /// ![ADLaMDisplay Regular](https://rana.github.io/google-fonts/doc/imgs/ADLaMDisplayRegular.svg)
+    /// ![ADLaMDisplay Regular](https://rana.github.io/google-fonts/doc/imgs/ADLaMDisplayRegular.webp)
     #[cfg(feature = "static")]
     ADLaMDisplayRegular = Family::ADLaMDisplay as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _regular_ font.
     ///
-    /// ![AROneSans Regular](https://rana.github.io/google-fonts/doc/imgs/AROneSansRegular.svg)
+    /// ![AROneSans Regular](https://rana.github.io/google-fonts/doc/imgs/AROneSansRegular.webp)
     #[cfg(feature = "static")]
     AROneSansRegular = Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _medium_ font.
     ///
-    /// ![AROneSans Medium](https://rana.github.io/google-fonts/doc/imgs/AROneSansMedium.svg)
+    /// ![AROneSans Medium](https://rana.github.io/google-fonts/doc/imgs/AROneSansMedium.webp)
     #[cfg(feature = "static")]
     AROneSansMedium = 1 + Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _semi bold_ font.
     ///
-    /// ![AROneSans SemiBold](https://rana.github.io/google-fonts/doc/imgs/AROneSansSemiBold.svg)
+    /// ![AROneSans SemiBold](https://rana.github.io/google-fonts/doc/imgs/AROneSansSemiBold.webp)
     #[cfg(feature = "static")]
     AROneSansSemiBold = 2 + Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _bold_ font.
     ///
-    /// ![AROneSans Bold](https://rana.github.io/google-fonts/doc/imgs/AROneSansBold.svg)
+    /// ![AROneSans Bold](https://rana.github.io/google-fonts/doc/imgs/AROneSansBold.webp)
     #[cfg(feature = "static")]
     AROneSansBold = 3 + Family::AROneSans as isize,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _variable_ font.
     ///
-    /// ![AROneSans Variable](https://rana.github.io/google-fonts/doc/imgs/AROneSansVariable.svg)
+    /// ![AROneSans Variable](https://rana.github.io/google-fonts/doc/imgs/AROneSansVariable.webp)
     #[cfg(feature = "variable")]
     AROneSansVariable = 4 + Family::AROneSans as isize,
     /// The [Abel](https://fonts.google.com/specimen/Abel) _regular_ font.
     ///
-    /// ![Abel Regular](https://rana.github.io/google-fonts/doc/imgs/AbelRegular.svg)
+    /// ![Abel Regular](https://rana.github.io/google-fonts/doc/imgs/AbelRegular.webp)
     #[cfg(feature = "static")]
     AbelRegular = Family::Abel as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _regular_ font.
     ///
-    /// ![AbhayaLibre Regular](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreRegular.svg)
+    /// ![AbhayaLibre Regular](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreRegular.webp)
     #[cfg(feature = "static")]
     AbhayaLibreRegular = Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _medium_ font.
     ///
-    /// ![AbhayaLibre Medium](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreMedium.svg)
+    /// ![AbhayaLibre Medium](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreMedium.webp)
     #[cfg(feature = "static")]
     AbhayaLibreMedium = 1 + Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _semi bold_ font.
     ///
-    /// ![AbhayaLibre SemiBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreSemiBold.svg)
+    /// ![AbhayaLibre SemiBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreSemiBold.webp)
     #[cfg(feature = "static")]
     AbhayaLibreSemiBold = 2 + Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _bold_ font.
     ///
-    /// ![AbhayaLibre Bold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreBold.svg)
+    /// ![AbhayaLibre Bold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreBold.webp)
     #[cfg(feature = "static")]
     AbhayaLibreBold = 3 + Family::AbhayaLibre as isize,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _extra bold_ font.
     ///
-    /// ![AbhayaLibre ExtraBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreExtraBold.svg)
+    /// ![AbhayaLibre ExtraBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreExtraBold.webp)
     #[cfg(feature = "static")]
     AbhayaLibreExtraBold = 4 + Family::AbhayaLibre as isize,
     /// The [Aboreto](https://fonts.google.com/specimen/Aboreto) _regular_ font.
     ///
-    /// ![Aboreto Regular](https://rana.github.io/google-fonts/doc/imgs/AboretoRegular.svg)
+    /// ![Aboreto Regular](https://rana.github.io/google-fonts/doc/imgs/AboretoRegular.webp)
     #[cfg(feature = "static")]
     AboretoRegular = Family::Aboreto as isize,
     /// The [Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface) _regular_ font.
     ///
-    /// ![AbrilFatface Regular](https://rana.github.io/google-fonts/doc/imgs/AbrilFatfaceRegular.svg)
+    /// ![AbrilFatface Regular](https://rana.github.io/google-fonts/doc/imgs/AbrilFatfaceRegular.webp)
     #[cfg(feature = "static")]
     AbrilFatfaceRegular = Family::AbrilFatface as isize,
     /// The [Abyssinica SIL](https://fonts.google.com/specimen/Abyssinica+SIL) _regular_ font.
     ///
-    /// ![AbyssinicaSIL Regular](https://rana.github.io/google-fonts/doc/imgs/AbyssinicaSILRegular.svg)
+    /// ![AbyssinicaSIL Regular](https://rana.github.io/google-fonts/doc/imgs/AbyssinicaSILRegular.webp)
     #[cfg(feature = "static")]
     AbyssinicaSILRegular = Family::AbyssinicaSIL as isize,
     /// The [Aclonica](https://fonts.google.com/specimen/Aclonica) _regular_ font.
     ///
-    /// ![Aclonica Regular](https://rana.github.io/google-fonts/doc/imgs/AclonicaRegular.svg)
+    /// ![Aclonica Regular](https://rana.github.io/google-fonts/doc/imgs/AclonicaRegular.webp)
     #[cfg(feature = "static")]
     AclonicaRegular = Family::Aclonica as isize,
     /// The [Acme](https://fonts.google.com/specimen/Acme) _regular_ font.
     ///
-    /// ![Acme Regular](https://rana.github.io/google-fonts/doc/imgs/AcmeRegular.svg)
+    /// ![Acme Regular](https://rana.github.io/google-fonts/doc/imgs/AcmeRegular.webp)
     #[cfg(feature = "static")]
     AcmeRegular = Family::Acme as isize,
     /// The [Actor](https://fonts.google.com/specimen/Actor) _regular_ font.
     ///
-    /// ![Actor Regular](https://rana.github.io/google-fonts/doc/imgs/ActorRegular.svg)
+    /// ![Actor Regular](https://rana.github.io/google-fonts/doc/imgs/ActorRegular.webp)
     #[cfg(feature = "static")]
     ActorRegular = Family::Actor as isize,
 }

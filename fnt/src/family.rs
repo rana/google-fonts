@@ -1,30 +1,16 @@
-use crate::category::Category;
-use crate::font::Font;
+
 use serde::{Deserialize, Serialize};
-use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
+use strum::{Display, EnumCount, EnumIter, EnumString, AsRefStr};
+use crate::font::Font;
+use crate::category::Category;
 
 /// The _family id_ increment.
-///
+/// 
 /// The Roboto Serif font family has 721 fonts.
 pub const ID_INCREMENT: isize = 1000;
 
 /// An _enumeration_ of [Google font](https://fonts.google.com) families.
-#[derive(
-    Debug,
-    Display,
-    Clone,
-    Copy,
-    Eq,
-    PartialEq,
-    Ord,
-    PartialOrd,
-    Serialize,
-    Deserialize,
-    EnumCount,
-    EnumIter,
-    EnumString,
-    AsRefStr,
-)]
+#[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
 pub enum Family {
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) font family.
     #[cfg(feature = "static")]
@@ -62,6 +48,7 @@ pub enum Family {
 }
 
 impl Family {
+
     /// Returns the _id_ for the [`Family`].
     pub fn id(&self) -> isize {
         *self as isize
@@ -69,7 +56,7 @@ impl Family {
 
     /// Returns the default [`Font`].
     pub fn font(&self) -> Font {
-        Font::from_id(self.id()).unwrap()
+       Font::from_id(self.id()).unwrap()
     }
 
     /// Converts an `isize` to a [`Family`].
