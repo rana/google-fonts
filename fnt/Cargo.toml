@@ -10,11 +10,10 @@ keywords = [
     "ttf",
 ]
 categories = [
-    "font",
-    "google",
+    "api-bindings",
     "graphics",
-    "true-type",
-    "ttf",
+    "text-processing",
+    "rendering",
 ]
 authors = ["Rana Ian"]
 repository = "https://github.com/rana/google-fonts"
