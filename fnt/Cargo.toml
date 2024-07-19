@@ -4,25 +4,17 @@ version = "0.1.0"
 edition = "2021"
 keywords = [
     "font",
-    "glyph",
     "google",
     "graphics",
-    "text-rendering",
-    "text",
     "true-type",
     "ttf",
-    "typography",
 ]
 categories = [
     "font",
-    "glyph",
     "google",
     "graphics",
-    "text-rendering",
-    "text",
     "true-type",
     "ttf",
-    "typography",
 ]
 authors = ["Rana Ian"]
 repository = "https://github.com/rana/google-fonts"
