@@ -1,8 +1,10 @@
 # google-fonts
 
-Download and cache TTF fonts from Google.
+Download and cache TTF fonts from Google using Rust.
 
 There are `1,708` font families, and `11,689` fonts.
+
+Similar to the [Downloadable Fonts](https://developer.android.com/develop/ui/views/text-and-emoji/downloadable-fonts) feature in Android Studio, and the Google [Web Fonts](https://developers.google.com/fonts/docs/developer_api) API.
 
 # Example
 
