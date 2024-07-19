@@ -42,3 +42,9 @@ name = "google_fonts"
 edition = "2021"
 crate-type = ["lib"]
 required-features = []
+
+[[example]]
+path = "examples/font_data.rs"
+name = "font_data"
+edition = "2021"
+required-features = []

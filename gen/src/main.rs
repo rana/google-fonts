@@ -9,7 +9,9 @@ use std::{
     fs::{self, File},
     io::{BufReader, Read, Write},
     path::PathBuf,
-    sync::{Arc, RwLock}, thread, time::Duration,
+    sync::{Arc, RwLock},
+    thread,
+    time::Duration,
 };
 
 pub const FAMILY: &str = "Family";
@@ -26,7 +28,7 @@ pub fn main() -> Result<()> {
     build("../fnt/src/", false)
 }
 
-pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
+pub fn build(pth: &str, wrt_imgs: bool) -> Result<()> {
     let cli = Client::new();
 
     // Get family metadata list from network.
@@ -195,11 +197,12 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
     fs::write(format!("{}subset.rs", pth), buf)?;
 
     let mut buf = String::with_capacity(1 << 20); // 1MB
-    wrt_fle_lib(&fnts, &mut buf, is_in_prj_gen);
-    let suffix = if is_in_prj_gen { "2" } else { "" };
-    fs::write(format!("{}lib{}.rs", pth, suffix), buf)?;
+    wrt_fle_lib(&fnts, &mut buf);
+    fs::write(format!("{}lib.rs", pth), buf)?;
 
-    wrt_fle_imgs(&fnts, &cli)?;
+    if wrt_imgs {
+        wrt_fle_imgs(&fnts, &cli)?;
+    }
 
     wrt_fle_cargo_toml(pth)?;
 
@@ -957,34 +960,20 @@ impl Error for StringError {}
     );
 }
 
-pub fn wrt_fle_lib(fnts: &[Arc<RwLock<Fnt>>], buf: &mut String, is_in_prj_gen: bool) {
-    if is_in_prj_gen {
-        buf.push_str(
-            r#"
-// pub mod category;
-// pub mod error;
-// pub mod family;
-// pub mod font;
-// pub mod subset;
-"#,
-        );
-    } else {
-        buf.push_str(
-            r#"
+pub fn wrt_fle_lib(fnts: &[Arc<RwLock<Fnt>>], buf: &mut String) {
+    buf.push_str(
+        r#"
 pub mod category;
 pub mod error;
 pub mod family;
 pub mod font;
 pub mod subset;
+pub use crate::category::*;
+pub use crate::error::*;
+pub use crate::family::*;
+pub use crate::font::*;
+pub use crate::subset::*;
 "#,
-        );
-    }
-    buf.push_str(
-        r"
-use crate::family::Family;
-use crate::font::Font;
-use crate::error::FontError;
-",
     );
 
     // Write individual font functions.
