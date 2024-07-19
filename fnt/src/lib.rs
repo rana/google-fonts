@@ -3,13 +3,18 @@ pub mod category;
 pub mod error;
 pub mod family;
 pub mod font;
-    
+pub mod subset;
+
 use crate::font::Font;
 use crate::error::FontError;
 
 /// Get font data for the [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Anja Meiners_.
+///
+/// ![ABeeZee Regular](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeRegular.webp)
 #[cfg(feature = "static")]
 pub fn abeezee_regular() -> Result<Vec<u8>, FontError> {
     Font::ABeeZeeRegular.get_and_cache()
@@ -18,6 +23,10 @@ pub fn abeezee_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _italic_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Anja Meiners_.
+///
+/// ![ABeeZee Italic](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeItalic.webp)
 #[cfg(feature = "static")]
 pub fn abeezee_italic() -> Result<Vec<u8>, FontError> {
     Font::ABeeZeeItalic.get_and_cache()
@@ -26,6 +35,10 @@ pub fn abeezee_italic() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [ADLaM Display](https://fonts.google.com/specimen/ADLaM+Display) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Mark Jamra_, _Neil Patel_, and _Andrew Footit_.
+///
+/// ![ADLaMDisplay Regular](https://rana.github.io/google-fonts/doc/imgs/ADLaMDisplayRegular.webp)
 #[cfg(feature = "static")]
 pub fn adlam_display_regular() -> Result<Vec<u8>, FontError> {
     Font::ADLaMDisplayRegular.get_and_cache()
@@ -34,6 +47,10 @@ pub fn adlam_display_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Niteesh Yadav_.
+///
+/// ![AROneSans Regular](https://rana.github.io/google-fonts/doc/imgs/AROneSansRegular.webp)
 #[cfg(feature = "static")]
 pub fn ar_one_sans_regular() -> Result<Vec<u8>, FontError> {
     Font::AROneSansRegular.get_and_cache()
@@ -42,6 +59,10 @@ pub fn ar_one_sans_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _medium_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Niteesh Yadav_.
+///
+/// ![AROneSans Medium](https://rana.github.io/google-fonts/doc/imgs/AROneSansMedium.webp)
 #[cfg(feature = "static")]
 pub fn ar_one_sans_medium() -> Result<Vec<u8>, FontError> {
     Font::AROneSansMedium.get_and_cache()
@@ -50,6 +71,10 @@ pub fn ar_one_sans_medium() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _semi bold_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Niteesh Yadav_.
+///
+/// ![AROneSans SemiBold](https://rana.github.io/google-fonts/doc/imgs/AROneSansSemiBold.webp)
 #[cfg(feature = "static")]
 pub fn ar_one_sans_semi_bold() -> Result<Vec<u8>, FontError> {
     Font::AROneSansSemiBold.get_and_cache()
@@ -58,6 +83,10 @@ pub fn ar_one_sans_semi_bold() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _bold_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Niteesh Yadav_.
+///
+/// ![AROneSans Bold](https://rana.github.io/google-fonts/doc/imgs/AROneSansBold.webp)
 #[cfg(feature = "static")]
 pub fn ar_one_sans_bold() -> Result<Vec<u8>, FontError> {
     Font::AROneSansBold.get_and_cache()
@@ -66,6 +95,10 @@ pub fn ar_one_sans_bold() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _variable_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Niteesh Yadav_.
+///
+/// ![AROneSans Variable](https://rana.github.io/google-fonts/doc/imgs/AROneSansVariable.webp)
 #[cfg(feature = "variable")]
 pub fn ar_one_sans_variable() -> Result<Vec<u8>, FontError> {
     Font::AROneSansVariable.get_and_cache()
@@ -74,6 +107,10 @@ pub fn ar_one_sans_variable() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Abel](https://fonts.google.com/specimen/Abel) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _MADType_.
+///
+/// ![Abel Regular](https://rana.github.io/google-fonts/doc/imgs/AbelRegular.webp)
 #[cfg(feature = "static")]
 pub fn abel_regular() -> Result<Vec<u8>, FontError> {
     Font::AbelRegular.get_and_cache()
@@ -82,6 +119,10 @@ pub fn abel_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Mooniak_.
+///
+/// ![AbhayaLibre Regular](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreRegular.webp)
 #[cfg(feature = "static")]
 pub fn abhaya_libre_regular() -> Result<Vec<u8>, FontError> {
     Font::AbhayaLibreRegular.get_and_cache()
@@ -90,6 +131,10 @@ pub fn abhaya_libre_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _medium_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Mooniak_.
+///
+/// ![AbhayaLibre Medium](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreMedium.webp)
 #[cfg(feature = "static")]
 pub fn abhaya_libre_medium() -> Result<Vec<u8>, FontError> {
     Font::AbhayaLibreMedium.get_and_cache()
@@ -98,6 +143,10 @@ pub fn abhaya_libre_medium() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _semi bold_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Mooniak_.
+///
+/// ![AbhayaLibre SemiBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreSemiBold.webp)
 #[cfg(feature = "static")]
 pub fn abhaya_libre_semi_bold() -> Result<Vec<u8>, FontError> {
     Font::AbhayaLibreSemiBold.get_and_cache()
@@ -106,6 +155,10 @@ pub fn abhaya_libre_semi_bold() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _bold_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Mooniak_.
+///
+/// ![AbhayaLibre Bold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreBold.webp)
 #[cfg(feature = "static")]
 pub fn abhaya_libre_bold() -> Result<Vec<u8>, FontError> {
     Font::AbhayaLibreBold.get_and_cache()
@@ -114,6 +167,10 @@ pub fn abhaya_libre_bold() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _extra bold_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Mooniak_.
+///
+/// ![AbhayaLibre ExtraBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreExtraBold.webp)
 #[cfg(feature = "static")]
 pub fn abhaya_libre_extra_bold() -> Result<Vec<u8>, FontError> {
     Font::AbhayaLibreExtraBold.get_and_cache()
@@ -122,6 +179,10 @@ pub fn abhaya_libre_extra_bold() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Aboreto](https://fonts.google.com/specimen/Aboreto) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Dominik Jáger_.
+///
+/// ![Aboreto Regular](https://rana.github.io/google-fonts/doc/imgs/AboretoRegular.webp)
 #[cfg(feature = "static")]
 pub fn aboreto_regular() -> Result<Vec<u8>, FontError> {
     Font::AboretoRegular.get_and_cache()
@@ -130,6 +191,10 @@ pub fn aboreto_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _TypeTogether_.
+///
+/// ![AbrilFatface Regular](https://rana.github.io/google-fonts/doc/imgs/AbrilFatfaceRegular.webp)
 #[cfg(feature = "static")]
 pub fn abril_fatface_regular() -> Result<Vec<u8>, FontError> {
     Font::AbrilFatfaceRegular.get_and_cache()
@@ -138,6 +203,10 @@ pub fn abril_fatface_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Abyssinica SIL](https://fonts.google.com/specimen/Abyssinica+SIL) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _SIL International_.
+///
+/// ![AbyssinicaSIL Regular](https://rana.github.io/google-fonts/doc/imgs/AbyssinicaSILRegular.webp)
 #[cfg(feature = "static")]
 pub fn abyssinica_sil_regular() -> Result<Vec<u8>, FontError> {
     Font::AbyssinicaSILRegular.get_and_cache()
@@ -146,6 +215,10 @@ pub fn abyssinica_sil_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Aclonica](https://fonts.google.com/specimen/Aclonica) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Astigmatic_.
+///
+/// ![Aclonica Regular](https://rana.github.io/google-fonts/doc/imgs/AclonicaRegular.webp)
 #[cfg(feature = "static")]
 pub fn aclonica_regular() -> Result<Vec<u8>, FontError> {
     Font::AclonicaRegular.get_and_cache()
@@ -154,6 +227,10 @@ pub fn aclonica_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Acme](https://fonts.google.com/specimen/Acme) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Juan Pablo del Peral_ and _Huerta Tipográfica_.
+///
+/// ![Acme Regular](https://rana.github.io/google-fonts/doc/imgs/AcmeRegular.webp)
 #[cfg(feature = "static")]
 pub fn acme_regular() -> Result<Vec<u8>, FontError> {
     Font::AcmeRegular.get_and_cache()
@@ -162,6 +239,10 @@ pub fn acme_regular() -> Result<Vec<u8>, FontError> {
 /// Get font data for the [Actor](https://fonts.google.com/specimen/Actor) _regular_ font.
 ///
 /// Loaded from the network and cached to disk.
+///
+/// Designed by _Thomas Junold_.
+///
+/// ![Actor Regular](https://rana.github.io/google-fonts/doc/imgs/ActorRegular.webp)
 #[cfg(feature = "static")]
 pub fn actor_regular() -> Result<Vec<u8>, FontError> {
     Font::ActorRegular.get_and_cache()

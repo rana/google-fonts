@@ -13,36 +13,98 @@ pub const ID_INCREMENT: isize = 1000;
 #[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
 pub enum Family {
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) font family.
+    ///
+    /// Designed by _Anja Meiners_.
+    ///
+    /// ![ABeeZee Regular](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeRegular.webp)
+    ///
+    /// ![ABeeZee Italic](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeItalic.webp)
     #[cfg(feature = "static")]
     ABeeZee = 0,
     /// The [ADLaM Display](https://fonts.google.com/specimen/ADLaM+Display) font family.
+    ///
+    /// Designed by _Mark Jamra_, _Neil Patel_, and _Andrew Footit_.
+    ///
+    /// ![ADLaMDisplay Regular](https://rana.github.io/google-fonts/doc/imgs/ADLaMDisplayRegular.webp)
     #[cfg(feature = "static")]
     ADLaMDisplay = 1000,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) font family.
+    ///
+    /// Designed by _Niteesh Yadav_.
+    ///
+    /// ![AROneSans Regular](https://rana.github.io/google-fonts/doc/imgs/AROneSansRegular.webp)
+    ///
+    /// ![AROneSans Medium](https://rana.github.io/google-fonts/doc/imgs/AROneSansMedium.webp)
+    ///
+    /// ![AROneSans SemiBold](https://rana.github.io/google-fonts/doc/imgs/AROneSansSemiBold.webp)
+    ///
+    /// ![AROneSans Bold](https://rana.github.io/google-fonts/doc/imgs/AROneSansBold.webp)
+    ///
+    /// ![AROneSans Variable](https://rana.github.io/google-fonts/doc/imgs/AROneSansVariable.webp)
     #[cfg(any(feature = "variable", feature = "static"))]
     AROneSans = 2000,
     /// The [Abel](https://fonts.google.com/specimen/Abel) font family.
+    ///
+    /// Designed by _MADType_.
+    ///
+    /// ![Abel Regular](https://rana.github.io/google-fonts/doc/imgs/AbelRegular.webp)
     #[cfg(feature = "static")]
     Abel = 3000,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) font family.
+    ///
+    /// Designed by _Mooniak_.
+    ///
+    /// ![AbhayaLibre Regular](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreRegular.webp)
+    ///
+    /// ![AbhayaLibre Medium](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreMedium.webp)
+    ///
+    /// ![AbhayaLibre SemiBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreSemiBold.webp)
+    ///
+    /// ![AbhayaLibre Bold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreBold.webp)
+    ///
+    /// ![AbhayaLibre ExtraBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreExtraBold.webp)
     #[cfg(feature = "static")]
     AbhayaLibre = 4000,
     /// The [Aboreto](https://fonts.google.com/specimen/Aboreto) font family.
+    ///
+    /// Designed by _Dominik Jáger_.
+    ///
+    /// ![Aboreto Regular](https://rana.github.io/google-fonts/doc/imgs/AboretoRegular.webp)
     #[cfg(feature = "static")]
     Aboreto = 5000,
     /// The [Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface) font family.
+    ///
+    /// Designed by _TypeTogether_.
+    ///
+    /// ![AbrilFatface Regular](https://rana.github.io/google-fonts/doc/imgs/AbrilFatfaceRegular.webp)
     #[cfg(feature = "static")]
     AbrilFatface = 6000,
     /// The [Abyssinica SIL](https://fonts.google.com/specimen/Abyssinica+SIL) font family.
+    ///
+    /// Designed by _SIL International_.
+    ///
+    /// ![AbyssinicaSIL Regular](https://rana.github.io/google-fonts/doc/imgs/AbyssinicaSILRegular.webp)
     #[cfg(feature = "static")]
     AbyssinicaSIL = 7000,
     /// The [Aclonica](https://fonts.google.com/specimen/Aclonica) font family.
+    ///
+    /// Designed by _Astigmatic_.
+    ///
+    /// ![Aclonica Regular](https://rana.github.io/google-fonts/doc/imgs/AclonicaRegular.webp)
     #[cfg(feature = "static")]
     Aclonica = 8000,
     /// The [Acme](https://fonts.google.com/specimen/Acme) font family.
+    ///
+    /// Designed by _Juan Pablo del Peral_ and _Huerta Tipográfica_.
+    ///
+    /// ![Acme Regular](https://rana.github.io/google-fonts/doc/imgs/AcmeRegular.webp)
     #[cfg(feature = "static")]
     Acme = 9000,
     /// The [Actor](https://fonts.google.com/specimen/Actor) font family.
+    ///
+    /// Designed by _Thomas Junold_.
+    ///
+    /// ![Actor Regular](https://rana.github.io/google-fonts/doc/imgs/ActorRegular.webp)
     #[cfg(feature = "static")]
     Actor = 10000,
 }
@@ -116,7 +178,7 @@ impl Family {
         }
     }
 
-    /// Returns fonts within the [`Family`].
+    /// Returns fonts for the [`Family`].
     pub fn fonts(&self) -> Vec<Font> {
         match self {
             #[cfg(feature = "static")]

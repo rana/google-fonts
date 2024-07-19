@@ -5,6 +5,8 @@ use crate::family::Family;
 use crate::font::Font;
 
 /// An _enumeration_ of font categories.
+/// 
+/// A font has one category.
 #[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
 pub enum Category {
     /// The _Display_ font category.
@@ -26,7 +28,7 @@ impl Category {
         }
     }
 
-    /// Returns families within the [`Category`].
+    /// Returns families for the [`Category`].
     pub fn families(&self) -> Vec<Family> {
         match self {
             Category::Display => {
@@ -66,7 +68,7 @@ impl Category {
         }
     }
 
-    /// Returns fonts within the [`Category`].
+    /// Returns fonts for the [`Category`].
     pub fn fonts(&self) -> Vec<Font> {
         match self {
             Category::Display => {

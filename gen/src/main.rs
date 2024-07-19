@@ -15,8 +15,10 @@ use std::{
 pub const FAMILY: &str = "Family";
 pub const FONT: &str = "Font";
 pub const CATEGORY: &str = "Category";
+pub const SUBSET: &str = "Subset";
 pub const VARIABLE: &str = "variable";
 pub const STATIC: &str = "static";
+pub const FULL: &str = "full";
 pub const TAKE: usize = 11; //usize::MAX;
 pub const FAMILY_ID_INCREMENT: u32 = 1000; // The Roboto Serif font family has 721 fonts.
 
@@ -50,23 +52,34 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
         .collect();
 
     // Create subset list.
-    let mut subsets: Vec<String> = fam_metas.iter().flat_map(|o| o.subsets.clone()).collect();
-    subsets.sort_unstable();
-    subsets.dedup();
-    eprintln!("subsets {:?}", subsets);
-
-    // TODO: ADD SUBSETS `variable`, `static`
+    let mut subset_names: Vec<String> = fam_metas.iter().flat_map(|o| o.subsets.clone()).collect();
+    subset_names.sort_unstable();
+    subset_names.dedup();
+    let subs: Vec<Rc<RefCell<Sub>>> = subset_names
+        .into_iter()
+        .map(|o| {
+            rc(Sub {
+                name: o.clone(),
+                variant: o.to_title_case().replace(' ', ""),
+                fams: Vec::new(),
+                fnts: Vec::new(),
+            })
+        })
+        .collect();
 
     // Create families list.
     let mut fams: Vec<Rc<RefCell<Fam>>> = Vec::with_capacity(fam_metas.len());
     let mut id: u32 = 0;
     for fam_meta in fam_metas.iter() {
-        let name = fam_meta.family.clone();
-        let variant = name.replace(' ', "");
+        // Find Cat.
         let cat = cats
             .iter()
             .find(|o| o.borrow().name == fam_meta.category)
             .unwrap();
+
+        // Create Fam.
+        let name = fam_meta.family.clone();
+        let variant = name.replace(' ', "");
         let fam = rc(Fam {
             id,
             name,
@@ -74,8 +87,21 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
             cat: cat.clone(),
             meta: fam_meta.clone(),
             fnts: Vec::new(),
+            subs: Vec::new(),
         });
+
+        // Associate Cat.
         cat.borrow_mut().fams.push(fam.clone());
+
+        // Associate Subs.
+        for sub in subs
+            .iter()
+            .filter(|o| fam_meta.subsets.contains(&o.borrow().name))
+        {
+            sub.borrow_mut().fams.push(fam.clone());
+            fam.borrow_mut().subs.push(sub.clone());
+        }
+
         fams.push(fam);
         id += FAMILY_ID_INCREMENT;
     }
@@ -85,7 +111,7 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
     let mut fnt_variants_cnt: HashMap<String, u8> = HashMap::with_capacity(fam_metas.len());
     for fam in fams.iter_mut() {
         // Get file list for network.
-        let fnt_fles = get_family_file_list(&fam.borrow().name, &cli)?;
+        let fnt_fles = fam.borrow().get_file_list(&cli)?.file_refs;
         for (idx_fnt_fle, fnt_fle) in fnt_fles.iter().enumerate() {
             // Clean font name.
             // Remove file suffix `.ttf` from filename: ABeeZee-Regular.ttf.
@@ -103,6 +129,7 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
                 name: name.replace('-', " "),
                 variant: name.replace('-', ""),
                 fam: fam.clone(),
+                subs: Vec::new(),
             };
 
             // Check for font name collision.
@@ -115,6 +142,20 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
                 }
             }
             let fnt = rc(fnt);
+
+            // Associate Subs.
+            for sub in subs.iter().filter(|o| {
+                fnt.borrow()
+                    .fam
+                    .borrow()
+                    .meta
+                    .subsets
+                    .contains(&o.borrow().name)
+            }) {
+                sub.borrow_mut().fnts.push(fnt.clone());
+                fnt.borrow_mut().subs.push(sub.clone());
+            }
+
             fam.borrow_mut().fnts.push(fnt.clone());
             fam.borrow_mut().cat.borrow_mut().fnts.push(fnt.clone());
             fnts.push(fnt);
@@ -142,21 +183,17 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
     fs::write(format!("{}category.rs", pth), buf)?;
 
     let mut buf = String::with_capacity(1 << 20); // 1MB
-    wrt_fle_lib(&fnts, &subsets, &mut buf, is_in_prj_gen);
+    wrt_fle_subset(&subs, &mut buf);
+    fs::write(format!("{}subset.rs", pth), buf)?;
+
+    let mut buf = String::with_capacity(1 << 20); // 1MB
+    wrt_fle_lib(&fnts, &mut buf, is_in_prj_gen);
     let suffix = if is_in_prj_gen { "2" } else { "" };
     fs::write(format!("{}lib{}.rs", pth, suffix), buf)?;
 
     wrt_fle_imgs(&fnts, &cli)?;
 
     wrt_fle_cargo_toml(pth)?;
-
-    // TODO: Designers (Add to font family doc comment, font doc comment)
-    // TODO: dateAdded, lastModified (Add to font family doc comment, font doc comment)
-    // TODO: Subsets (See metadata) Add is_subset()?
-    // TODO: Add enum for each Subset.
-    // TODO: Add function for each subset returning Vec<_>.
-    // TODO: SVG generation.
-    // TODO: SVG reference in doc comment.
 
     Ok(())
 }
@@ -187,6 +224,20 @@ pub const ID_INCREMENT: isize = 1000;
             fam.borrow().name,
             fam.borrow().name.replace(' ', "+"),
         ));
+        buf.push_str("    ///\n");
+        buf.push_str(&format!(
+            "    /// Designed by {}.\n",
+            comma_and(&fam.borrow().meta.designers)
+        ));
+
+        for fnt in fam.borrow().fnts.iter().take(9) {
+            buf.push_str("    ///\n");
+            buf.push_str(&format!(
+                "    /// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.webp)\n",
+                fnt.borrow().name,
+                fnt.borrow().variant
+            ));
+        }
         buf.push_str(&cfg_feature("    ", fam.borrow().features()));
         buf.push_str(&format!(
             "    {} = {},\n",
@@ -260,7 +311,7 @@ pub const ID_INCREMENT: isize = 1000;
 
     // Write `fonts`.
     buf.push('\n');
-    buf.push_str("    /// Returns fonts within the [`Family`].\n");
+    buf.push_str("    /// Returns fonts for the [`Family`].\n");
     buf.push_str(&format!("    pub fn fonts(&self) -> Vec<{}> {{\n", FONT));
     buf.push_str("        match self {\n");
     for fam in fams.iter() {
@@ -349,6 +400,11 @@ pub enum Font {
         ));
         buf.push_str("    ///\n");
         buf.push_str(&format!(
+            "    /// Designed by {}.\n",
+            comma_and(&fnt.borrow().fam.borrow().meta.designers)
+        ));
+        buf.push_str("    ///\n");
+        buf.push_str(&format!(
             "    /// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.webp)\n",
             fnt.borrow().name,
             fnt.borrow().variant
@@ -386,7 +442,7 @@ impl Font {
         Family::from_id((self.id() / ID_INCREMENT) * ID_INCREMENT).unwrap()
     }
 
-    /// Returns the index of the font file within the [`Family`].
+    /// Returns the index of the font file for the [`Family`].
     pub fn font_file_idx(&self) -> usize {
          (self.id() - self.family().id()) as usize 
     }
@@ -590,6 +646,8 @@ use crate::family::Family;
 use crate::font::Font;
 
 /// An _enumeration_ of font categories.
+/// 
+/// A font has one category.
 #[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
 "#);
     buf.push_str(&format!("pub enum {} {{\n", CATEGORY));
@@ -600,7 +658,7 @@ use crate::font::Font;
         ));
         buf.push_str(&format!("    {},\n", cat.borrow().variant));
     }
-    buf.push_str("}\n");
+    buf.push_str("}\n"); // end enum Category
 
     // Write impl Category.
     buf.push('\n');
@@ -627,7 +685,7 @@ use crate::font::Font;
 
     // Write `families`.
     buf.push('\n');
-    buf.push_str("    /// Returns families within the [`Category`].\n");
+    buf.push_str("    /// Returns families for the [`Category`].\n");
     buf.push_str(&format!(
         "    pub fn families(&self) -> Vec<{}> {{\n",
         FAMILY
@@ -659,7 +717,7 @@ use crate::font::Font;
 
     // Write `fonts`.
     buf.push('\n');
-    buf.push_str("    /// Returns fonts within the [`Category`].\n");
+    buf.push_str("    /// Returns fonts for the [`Category`].\n");
     buf.push_str(&format!("    pub fn fonts(&self) -> Vec<{}> {{\n", FONT));
     buf.push_str("        match self {\n");
     for cat in cats.iter() {
@@ -670,6 +728,100 @@ use crate::font::Font;
         ));
         buf.push_str("                vec![\n");
         for fnt in cat.borrow().fnts.iter() {
+            buf.push_str(&cfg_feature(
+                "                    ",
+                fnt.borrow().features(),
+            ));
+            buf.push_str(&format!(
+                "                    {}::{},\n",
+                FONT,
+                fnt.borrow().variant
+            ));
+        }
+        buf.push_str("                ]\n");
+        buf.push_str("            }\n");
+    }
+    buf.push_str("        }\n");
+    buf.push_str("    }\n"); // end `fonts`
+
+    buf.push_str("}\n"); // end impl Family
+}
+
+pub fn wrt_fle_subset(subs: &[Rc<RefCell<Sub>>], buf: &mut String) {
+    // Write enum.
+    // pub enum Subset {
+    //     Latin,
+    // }
+    buf.push_str(r#"
+use serde::{Deserialize, Serialize};
+use strum::{Display, EnumCount, EnumIter, EnumString, AsRefStr};
+use crate::family::Family;
+use crate::font::Font;
+
+/// An _enumeration_ of font subsets.
+/// 
+/// A font has one or more subsets.
+#[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+"#);
+    buf.push_str(&format!("pub enum {} {{\n", SUBSET));
+    for sub in subs.iter() {
+        buf.push_str(&format!(
+            "    /// The _{}_ font subset.\n",
+            sub.borrow().name
+        ));
+        buf.push_str(&format!("    {},\n", sub.borrow().variant));
+    }
+    buf.push_str("}\n"); // end enum Subset
+
+    // Write impl Subset.
+    buf.push('\n');
+    buf.push_str(&format!("impl {} {{\n", SUBSET));
+
+    // Write `families`.
+    buf.push('\n');
+    buf.push_str("    /// Returns families for the [`Subset`].\n");
+    buf.push_str(&format!(
+        "    pub fn families(&self) -> Vec<{}> {{\n",
+        FAMILY
+    ));
+    buf.push_str("        match self {\n");
+    for sub in subs.iter() {
+        buf.push_str(&format!(
+            "            {}::{} => {{\n",
+            SUBSET,
+            sub.borrow().variant
+        ));
+        buf.push_str("                vec![\n");
+        for fam in sub.borrow().fams.iter() {
+            buf.push_str(&cfg_feature(
+                "                    ",
+                fam.borrow().features(),
+            ));
+            buf.push_str(&format!(
+                "                    {}::{},\n",
+                FAMILY,
+                fam.borrow().variant
+            ));
+        }
+        buf.push_str("                ]\n");
+        buf.push_str("            }\n");
+    }
+    buf.push_str("        }\n");
+    buf.push_str("    }\n"); // end `families`
+
+    // Write `fonts`.
+    buf.push('\n');
+    buf.push_str("    /// Returns fonts for the [`Subset`].\n");
+    buf.push_str(&format!("    pub fn fonts(&self) -> Vec<{}> {{\n", FONT));
+    buf.push_str("        match self {\n");
+    for sub in subs.iter() {
+        buf.push_str(&format!(
+            "            {}::{} => {{\n",
+            SUBSET,
+            sub.borrow().variant
+        ));
+        buf.push_str("                vec![\n");
+        for fnt in sub.borrow().fnts.iter() {
             buf.push_str(&cfg_feature(
                 "                    ",
                 fnt.borrow().features(),
@@ -815,12 +967,7 @@ impl Error for StringError {}
     );
 }
 
-pub fn wrt_fle_lib(
-    fnts: &[Rc<RefCell<Fnt>>],
-    subsets: &[String],
-    buf: &mut String,
-    is_in_prj_gen: bool,
-) {
+pub fn wrt_fle_lib(fnts: &[Rc<RefCell<Fnt>>], buf: &mut String, is_in_prj_gen: bool) {
     if is_in_prj_gen {
         buf.push_str(
             r#"
@@ -828,16 +975,18 @@ pub fn wrt_fle_lib(
 // pub mod error;
 // pub mod family;
 // pub mod font;
-    "#,
+// pub mod subset;
+"#,
         );
     } else {
         buf.push_str(
-            r"
+            r#"
 pub mod category;
 pub mod error;
 pub mod family;
 pub mod font;
-    ",
+pub mod subset;
+"#,
         );
     }
     buf.push_str(
@@ -858,6 +1007,17 @@ use crate::error::FontError;
         ));
         buf.push_str("///\n");
         buf.push_str("/// Loaded from the network and cached to disk.\n");
+        buf.push_str("///\n");
+        buf.push_str(&format!(
+            "/// Designed by {}.\n",
+            comma_and(&fnt.borrow().fam.borrow().meta.designers)
+        ));
+        buf.push_str("///\n");
+        buf.push_str(&format!(
+            "/// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.webp)\n",
+            fnt.borrow().name,
+            fnt.borrow().variant
+        ));
         buf.push_str(&cfg_feature("", fnt.borrow().features()));
         buf.push_str(&format!(
             "pub fn {}() -> Result<Vec<u8>, FontError> {{\n",
@@ -870,35 +1030,6 @@ use crate::error::FontError;
         ));
         buf.push_str("}\n");
     }
-
-    // TODO: subset fns
-    // // Write `variable_fonts`
-    // buf.push('\n');
-    // buf.push_str("/// Fonts which use _variable_ font technology.\n");
-    // buf.push_str(&format!("pub fn variable_fonts() -> Vec<{}> {{\n", FONT));
-    // buf.push_str("    vec![\n");
-    // for fnt in fnts
-    //     .iter()
-    //     .filter(|o| o.borrow().variant.contains("Variable"))
-    // {
-    //     buf.push_str(&format!("        {}::{},\n", FONT, fnt.borrow().variant));
-    // }
-    // buf.push_str("    ]\n");
-    // buf.push_str("}\n");
-
-    // // Write `static_fonts`.
-    // buf.push('\n');
-    // buf.push_str("/// Fonts which use _static_ font technology.\n");
-    // buf.push_str(&format!("pub fn static_fonts() -> Vec<{}> {{\n", FONT));
-    // buf.push_str("    vec![\n");
-    // for fnt in fnts
-    //     .iter()
-    //     .filter(|o| !o.borrow().variant.contains("Variable"))
-    // {
-    //     buf.push_str(&format!("        {}::{},\n", FONT, fnt.borrow().variant));
-    // }
-    // buf.push_str("    ]\n");
-    // buf.push_str("}\n");
 
     // Write `tests` module.
     buf.push('\n');
@@ -948,7 +1079,7 @@ pub fn wrt_fle_imgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
 
         // Measure font.
         let (_, mut rect) = font.measure_str(name, Some(&paint1));
-        let mrg: f32 = 3.0;
+        let mrg: f32 = 4.0;
 
         // Add margin to image.
         rect.left -= mrg;
@@ -997,11 +1128,11 @@ pub fn wrt_fle_cargo_toml(dir_pth: &str) -> Result<()> {
     man.features.clear();
 
     // Add features.
-    man.features.insert("default".into(), vec![VARIABLE.into()]);
+    man.features.insert("default".into(), vec![FULL.into()]);
     man.features
-        .insert("full".into(), vec![VARIABLE.into(), STATIC.into()]);
-    man.features.insert("variable".into(), vec![]);
-    man.features.insert("static".into(), vec![]);
+        .insert(FULL.into(), vec![VARIABLE.into(), STATIC.into()]);
+    man.features.insert(VARIABLE.into(), vec![]);
+    man.features.insert(STATIC.into(), vec![]);
 
     // Serialize the mutated manifest back to TOML format
     let toml_string = toml::ser::to_string(&man)?;
@@ -1031,6 +1162,34 @@ pub fn cfg_feature(indent: &str, features: Vec<String>) -> String {
         }
         buf.push_str("))]\n");
         buf
+    }
+}
+
+/// Enumerate items in a sentence.
+///
+/// For example, "thing1, thing2, and thing3".
+pub fn comma_and(vals: &[String]) -> String {
+    match vals.len() {
+        0 => "".into(),
+        1 => format!("_{}_", vals[0]),
+        2 => format!("_{}_ and _{}_", vals[0], vals[1]),
+        _ => {
+            let cap: usize = vals.iter().map(|o| o.len()).sum();
+            let mut buf = String::with_capacity(cap + ((vals.len() - 1) * 2) + 4);
+            let idx_lst = vals.len() - 1;
+            for (idx, val) in vals.iter().enumerate() {
+                if idx != 0 {
+                    if idx != idx_lst {
+                        buf.push_str(", ");
+                    } else {
+                        buf.push_str(", and ");
+                    }
+                }
+                buf.push_str(&format!("_{}_", val));
+            }
+
+            buf
+        }
     }
 }
 
@@ -1210,63 +1369,6 @@ pub fn cache_dir() -> PathBuf {
     pth
 }
 
-/// Get a file list for font families.
-pub fn get_family_file_list(family: &str, cli: &Client) -> Result<Vec<FileRef>> {
-    // Create file path.
-    let mut pth = cache_dir();
-    pth.push(family.replace(' ', ""));
-    pth.set_extension("json");
-
-    // Check if the file already exists.
-    if pth.exists() {
-        // Load the file.
-        let fle = File::open(pth)?;
-        let rdr = BufReader::new(fle);
-
-        // Deserialize the JSON into a struct.
-        let ret: FamilyFileList = serde_json::from_reader(rdr)?;
-        return Ok(ret.manifest.file_refs);
-    }
-
-    let txt = cli
-        .get(FILE_LIST_URL)
-        .query(&[("family", family)])
-        .send()?
-        .text()?;
-    // let mut pth = dirs::document_dir().unwrap();
-    // pth.push("meta.json");
-    // fs::write(pth, txt.as_bytes())?;
-
-    // Trim leading excess characters
-    // to allow deserialization.
-    //  ")]}'\n{\n
-    let mut txt: &str = txt.as_ref();
-    if let Some(idx) = txt.find('{') {
-        if idx != 0 {
-            txt = &txt[idx..];
-        }
-    }
-
-    // Create the cache directory if necessary.
-    // Get the directory part of the path.
-    if let Some(directory) = pth.parent() {
-        // Check if the directory exists.
-        if !directory.exists() {
-            // Create the directory and any missing parent directories.
-            fs::create_dir_all(directory).unwrap();
-        }
-    }
-
-    // Write the data to disk for caching.
-    // eprintln!("writing {:?}", &pth);
-    fs::write(pth, txt)?;
-
-    // Deserialize JSON to struct.
-    let ret: FamilyFileList = serde_json::from_str(txt)?;
-
-    Ok(ret.manifest.file_refs)
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FamilyFileList {
@@ -1302,6 +1404,7 @@ pub struct Fam {
     pub cat: Rc<RefCell<Cat>>,
     pub meta: FamilyMetadata,
     pub fnts: Vec<Rc<RefCell<Fnt>>>,
+    pub subs: Vec<Rc<RefCell<Sub>>>,
 }
 #[derive(Debug, Clone)]
 pub struct Fnt {
@@ -1309,10 +1412,19 @@ pub struct Fnt {
     pub name: String,
     pub variant: String,
     pub fam: Rc<RefCell<Fam>>,
+    pub subs: Vec<Rc<RefCell<Sub>>>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Cat {
+    pub name: String,
+    pub variant: String,
+    pub fams: Vec<Rc<RefCell<Fam>>>,
+    pub fnts: Vec<Rc<RefCell<Fnt>>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Sub {
     pub name: String,
     pub variant: String,
     pub fams: Vec<Rc<RefCell<Fam>>>,
@@ -1329,6 +1441,63 @@ impl Fam {
             ret.push(STATIC.into());
         }
         ret
+    }
+
+    /// Get a file list for font families.
+    pub fn get_file_list(&self, cli: &Client) -> Result<Manifest> {
+        // Create file path.
+        let mut pth = cache_dir();
+        pth.push(self.name.replace(' ', ""));
+        pth.set_extension("json");
+
+        // Check if the file already exists.
+        if pth.exists() {
+            // Load the file.
+            let fle = File::open(pth)?;
+            let rdr = BufReader::new(fle);
+
+            // Deserialize the JSON into a struct.
+            let ret: FamilyFileList = serde_json::from_reader(rdr)?;
+            return Ok(ret.manifest);
+        }
+
+        let txt = cli
+            .get(FILE_LIST_URL)
+            .query(&[("family", &self.name)])
+            .send()?
+            .text()?;
+        // let mut pth = dirs::document_dir().unwrap();
+        // pth.push("meta.json");
+        // fs::write(pth, txt.as_bytes())?;
+
+        // Trim leading excess characters
+        // to allow deserialization.
+        //  ")]}'\n{\n
+        let mut txt: &str = txt.as_ref();
+        if let Some(idx) = txt.find('{') {
+            if idx != 0 {
+                txt = &txt[idx..];
+            }
+        }
+
+        // Create the cache directory if necessary.
+        // Get the directory part of the path.
+        if let Some(directory) = pth.parent() {
+            // Check if the directory exists.
+            if !directory.exists() {
+                // Create the directory and any missing parent directories.
+                fs::create_dir_all(directory).unwrap();
+            }
+        }
+
+        // Write the data to disk for caching.
+        // eprintln!("writing {:?}", &pth);
+        fs::write(pth, txt)?;
+
+        // Deserialize JSON to struct.
+        let ret: FamilyFileList = serde_json::from_str(txt)?;
+
+        Ok(ret.manifest)
     }
 }
 
@@ -1368,7 +1537,7 @@ impl Fnt {
             return Ok(buffer);
         }
 
-        let file_refs = get_family_file_list(&self.fam.borrow().name, cli)?;
+        let file_refs = self.fam.borrow().get_file_list(cli)?.file_refs;
 
         // Get the font index.
         let (idx, _) = self
