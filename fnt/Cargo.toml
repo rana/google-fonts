@@ -2,15 +2,37 @@
 name = "google-fonts"
 version = "0.1.0"
 edition = "2021"
-keywords = ["font", "google"]
-license = "UNLICENSE"
+keywords = [
+    "font",
+    "glyph",
+    "google",
+    "graphics",
+    "text-rendering",
+    "text",
+    "true-type",
+    "ttf",
+    "typography",
+]
+categories = [
+    "font",
+    "glyph",
+    "google",
+    "graphics",
+    "text-rendering",
+    "text",
+    "true-type",
+    "ttf",
+    "typography",
+]
+authors = ["Rana Ian"]
+repository = "https://github.com/rana/google-fonts"
+license = "MIT"
+readme = "../README.md"
+description = "Download and cache TTF fonts from Google using Rust."
 
 [dependencies]
 dirs = "5.0.1"
 serde_json = "1.0.120"
-
-[dependencies.gen]
-path = "../gen"
 
 [dependencies.reqwest]
 version = "0.12.5"
@@ -27,9 +49,6 @@ features = ["derive", "strum_macros"]
 [dev-dependencies]
 ttf-parser = "0.24.0"
 
-[build-dependencies]
-anyhow = "1.0.86"
-
 [features]
 default = ["full"]
 full = ["variable", "static"]
@@ -44,7 +63,7 @@ crate-type = ["lib"]
 required-features = []
 
 [[example]]
-path = "examples/font_data.rs"
-name = "font_data"
+path = "examples/main.rs"
+name = "main"
 edition = "2021"
 required-features = []
