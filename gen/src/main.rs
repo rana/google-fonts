@@ -2,7 +2,7 @@ use anyhow::Result;
 use heck::ToTitleCase;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
-use skia_safe::{surfaces, Color, EncodedImageFormat, Font, FontMgr, Paint, Rect};
+use skia_safe::{surfaces, Color, EncodedImageFormat, Font, FontMgr, Paint};
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -19,7 +19,7 @@ pub const SUBSET: &str = "Subset";
 pub const VARIABLE: &str = "variable";
 pub const STATIC: &str = "static";
 pub const FULL: &str = "full";
-pub const TAKE: usize = 11; //usize::MAX;
+pub const TAKE: usize = usize::MAX;
 pub const FAMILY_ID_INCREMENT: u32 = 1000; // The Roboto Serif font family has 721 fonts.
 
 pub fn main() -> Result<()> {
@@ -212,10 +212,13 @@ use crate::category::Category;
 /// The _family id_ increment.
 /// 
 /// The Roboto Serif font family has 721 fonts.
-pub const ID_INCREMENT: isize = 1000;
+pub const ID_INCREMENT: u32 = 1000;
 
 /// An _enumeration_ of [Google font](https://fonts.google.com) families.
+/// 
+/// A font family may have one or more fonts with different styles and sizes.
 #[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+#[repr(u32)] // for `mem::transmute`
 "#);
     buf.push_str(&format!("pub enum {} {{\n", FAMILY));
     for fam in fams.iter() {
@@ -253,40 +256,22 @@ pub const ID_INCREMENT: isize = 1000;
     buf.push_str(
         r#"
     /// Returns the _id_ for the [`Family`].
-    pub fn id(&self) -> isize {
-        *self as isize
+    pub fn id(&self) -> u32 {
+        *self as u32
     }
 
-    /// Returns the default [`Font`].
+    /// Returns the first [`Font`].
     pub fn font(&self) -> Font {
-       Font::from_id(self.id()).unwrap()
+       Font::from_id(self.id())
     }
 
 "#,
     );
 
     // Write `from_id`.
-    // pub fn from_id(id: isize) -> Option<Self> {
-    //     match id {
-    //         0 => Some(Family::ABeeZee),
-    //         1000 => Some(Family::ADLaMDisplay),
-    //         _ => None,
-    //     }
-    // }
-    buf.push_str("    /// Converts an `isize` to a [`Family`].\n");
-    buf.push_str("    pub fn from_id(id: isize) -> Option<Self> {\n");
-    buf.push_str("        match id {\n");
-    for fam in fams.iter() {
-        buf.push_str(&cfg_feature("            ", fam.borrow().features()));
-        buf.push_str(&format!(
-            "            {} => Some({}::{}),\n",
-            fam.borrow().id,
-            FAMILY,
-            fam.borrow().variant
-        ));
-    }
-    buf.push_str("            _ => None,\n");
-    buf.push_str("        }\n");
+    buf.push_str("    /// Transforms an _id_ into a [`Family`].\n");
+    buf.push_str("    pub(crate) fn from_id(id: u32) -> Self {\n");
+    buf.push_str("        unsafe { std::mem::transmute(id) }\n");
     buf.push_str("    }\n"); // end from_id
 
     // Write `name`.
@@ -379,6 +364,7 @@ use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
 
 /// An _enumeration_ of [Google fonts](https://fonts.google.com).
 #[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+#[repr(u32)] // for `mem::transmute`
 pub enum Font {
 "#);
     let mut id: u16 = 0;
@@ -412,13 +398,13 @@ pub enum Font {
         buf.push_str(&cfg_feature("    ", fnt.borrow().features()));
         if id == 0 {
             buf.push_str(&format!(
-                "    {} = Family::{} as isize,\n",
+                "    {} = Family::{} as u32,\n",
                 fnt.borrow().variant,
                 fnt.borrow().fam.borrow().variant
             ));
         } else {
             buf.push_str(&format!(
-                "    {} = {} + Family::{} as isize,\n",
+                "    {} = {} + Family::{} as u32,\n",
                 fnt.borrow().variant,
                 id,
                 fnt.borrow().fam.borrow().variant
@@ -433,13 +419,13 @@ pub enum Font {
         r#"
 impl Font {
     /// Returns the _id_ for the [`Font`].
-    pub fn id(&self) -> isize {
-        *self as isize
+    pub fn id(&self) -> u32 {
+        *self as u32
     }
 
     /// Returns the [`Family`].
     pub fn family(&self) -> Family {
-        Family::from_id((self.id() / ID_INCREMENT) * ID_INCREMENT).unwrap()
+        Family::from_id((self.id() / ID_INCREMENT) * ID_INCREMENT)
     }
 
     /// Returns the index of the font file for the [`Family`].
@@ -515,7 +501,7 @@ impl Font {
     }
 
     /// Get font data and store locally.
-    pub fn get_and_cache(&self) -> Result<Vec<u8>, FontError> {
+    pub fn get_with_cache(&self) -> Result<Vec<u8>, FontError> {
         // Get the cache directory.
         match dirs::cache_dir() {
             None => Err(FontError::CacheDir(StringError::new(
@@ -564,27 +550,9 @@ impl Font {
     );
 
     // Write `from_id`.
-    // pub fn from_id(id: isize) -> Option<Self> {
-    //     match id {
-    //         0 => Some(Font::ABeeZeeRegular),
-    //         1 => Some(Font::ABeeZeeItalic),
-    //         _ => None,
-    //     }
-    // }
-    buf.push_str("    /// Converts an `isize` to a [`Font`].\n");
-    buf.push_str("    pub fn from_id(id: isize) -> Option<Self> {\n");
-    buf.push_str("        match id {\n");
-    for fnt in fnts.iter() {
-        buf.push_str(&cfg_feature("            ", fnt.borrow().features()));
-        buf.push_str(&format!(
-            "            {} => Some({}::{}),\n",
-            fnt.borrow().id + fnt.borrow().fam.borrow().id,
-            FONT,
-            fnt.borrow().variant
-        ));
-    }
-    buf.push_str("            _ => None,\n");
-    buf.push_str("        }\n");
+    buf.push_str("    /// Transforms an _id_ into a [`Font`].\n");
+    buf.push_str("    pub(crate) fn from_id(id: u32) -> Self {\n");
+    buf.push_str("        unsafe { std::mem::transmute(id) }\n");
     buf.push_str("    }\n"); // end from_id
 
     // Write `category`.
@@ -991,6 +959,7 @@ pub mod subset;
     }
     buf.push_str(
         r"
+use crate::family::Family;
 use crate::font::Font;
 use crate::error::FontError;
 ",
@@ -1024,7 +993,7 @@ use crate::error::FontError;
             fnt.borrow().fn_name()
         ));
         buf.push_str(&format!(
-            "    {}::{}.get_and_cache()\n",
+            "    {}::{}.get_with_cache()\n",
             FONT,
             fnt.borrow().variant
         ));
@@ -1037,6 +1006,19 @@ use crate::error::FontError;
     buf.push_str("mod tests {\n");
     buf.push_str("    use super::*;\n");
     buf.push_str("    use ttf_parser::Face;\n");
+
+    // Test Family-Font id casting.
+    buf.push('\n');
+    buf.push_str("    #[test]\n");
+    buf.push_str("    #[cfg(feature = \"static\")]\n");
+    buf.push_str("    fn test_cast_family_font() {\n");
+    buf.push_str("        let fam = Family::ABeeZee;\n");
+    buf.push_str("        let fnt = Font::ABeeZeeRegular;\n");
+    buf.push_str("        assert_eq!(fam, fnt.family());\n");
+    buf.push_str("        assert_eq!(fnt, fam.font());\n");
+    buf.push_str("    }\n");
+
+    // Test getting each font's data.
     for fnt in fnts.iter() {
         buf.push('\n');
         buf.push_str("    #[test]\n");

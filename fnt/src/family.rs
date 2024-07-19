@@ -7,10 +7,13 @@ use crate::category::Category;
 /// The _family id_ increment.
 /// 
 /// The Roboto Serif font family has 721 fonts.
-pub const ID_INCREMENT: isize = 1000;
+pub const ID_INCREMENT: u32 = 1000;
 
 /// An _enumeration_ of [Google font](https://fonts.google.com) families.
+/// 
+/// A font family may have one or more fonts with different styles and sizes.
 #[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+#[repr(u32)] // for `mem::transmute`
 pub enum Family {
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) font family.
     ///
@@ -112,42 +115,18 @@ pub enum Family {
 impl Family {
 
     /// Returns the _id_ for the [`Family`].
-    pub fn id(&self) -> isize {
-        *self as isize
+    pub fn id(&self) -> u32 {
+        *self as u32
     }
 
-    /// Returns the default [`Font`].
+    /// Returns the first [`Font`].
     pub fn font(&self) -> Font {
-       Font::from_id(self.id()).unwrap()
+       Font::from_id(self.id())
     }
 
-    /// Converts an `isize` to a [`Family`].
-    pub fn from_id(id: isize) -> Option<Self> {
-        match id {
-            #[cfg(feature = "static")]
-            0 => Some(Family::ABeeZee),
-            #[cfg(feature = "static")]
-            1000 => Some(Family::ADLaMDisplay),
-            #[cfg(any(feature = "variable", feature = "static"))]
-            2000 => Some(Family::AROneSans),
-            #[cfg(feature = "static")]
-            3000 => Some(Family::Abel),
-            #[cfg(feature = "static")]
-            4000 => Some(Family::AbhayaLibre),
-            #[cfg(feature = "static")]
-            5000 => Some(Family::Aboreto),
-            #[cfg(feature = "static")]
-            6000 => Some(Family::AbrilFatface),
-            #[cfg(feature = "static")]
-            7000 => Some(Family::AbyssinicaSIL),
-            #[cfg(feature = "static")]
-            8000 => Some(Family::Aclonica),
-            #[cfg(feature = "static")]
-            9000 => Some(Family::Acme),
-            #[cfg(feature = "static")]
-            10000 => Some(Family::Actor),
-            _ => None,
-        }
+    /// Transforms an _id_ into a [`Family`].
+    pub(crate) fn from_id(id: u32) -> Self {
+        unsafe { std::mem::transmute(id) }
     }
 
     /// The name of the font [`Family`] with spaces.

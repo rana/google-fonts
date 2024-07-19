@@ -9,6 +9,7 @@ use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
 
 /// An _enumeration_ of [Google fonts](https://fonts.google.com).
 #[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+#[repr(u32)] // for `mem::transmute`
 pub enum Font {
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _regular_ font.
     ///
@@ -16,151 +17,151 @@ pub enum Font {
     ///
     /// ![ABeeZee Regular](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeRegular.webp)
     #[cfg(feature = "static")]
-    ABeeZeeRegular = Family::ABeeZee as isize,
+    ABeeZeeRegular = Family::ABeeZee as u32,
     /// The [ABeeZee](https://fonts.google.com/specimen/ABeeZee) _italic_ font.
     ///
     /// Designed by _Anja Meiners_.
     ///
     /// ![ABeeZee Italic](https://rana.github.io/google-fonts/doc/imgs/ABeeZeeItalic.webp)
     #[cfg(feature = "static")]
-    ABeeZeeItalic = 1 + Family::ABeeZee as isize,
+    ABeeZeeItalic = 1 + Family::ABeeZee as u32,
     /// The [ADLaM Display](https://fonts.google.com/specimen/ADLaM+Display) _regular_ font.
     ///
     /// Designed by _Mark Jamra_, _Neil Patel_, and _Andrew Footit_.
     ///
     /// ![ADLaMDisplay Regular](https://rana.github.io/google-fonts/doc/imgs/ADLaMDisplayRegular.webp)
     #[cfg(feature = "static")]
-    ADLaMDisplayRegular = Family::ADLaMDisplay as isize,
+    ADLaMDisplayRegular = Family::ADLaMDisplay as u32,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _regular_ font.
     ///
     /// Designed by _Niteesh Yadav_.
     ///
     /// ![AROneSans Regular](https://rana.github.io/google-fonts/doc/imgs/AROneSansRegular.webp)
     #[cfg(feature = "static")]
-    AROneSansRegular = Family::AROneSans as isize,
+    AROneSansRegular = Family::AROneSans as u32,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _medium_ font.
     ///
     /// Designed by _Niteesh Yadav_.
     ///
     /// ![AROneSans Medium](https://rana.github.io/google-fonts/doc/imgs/AROneSansMedium.webp)
     #[cfg(feature = "static")]
-    AROneSansMedium = 1 + Family::AROneSans as isize,
+    AROneSansMedium = 1 + Family::AROneSans as u32,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _semi bold_ font.
     ///
     /// Designed by _Niteesh Yadav_.
     ///
     /// ![AROneSans SemiBold](https://rana.github.io/google-fonts/doc/imgs/AROneSansSemiBold.webp)
     #[cfg(feature = "static")]
-    AROneSansSemiBold = 2 + Family::AROneSans as isize,
+    AROneSansSemiBold = 2 + Family::AROneSans as u32,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _bold_ font.
     ///
     /// Designed by _Niteesh Yadav_.
     ///
     /// ![AROneSans Bold](https://rana.github.io/google-fonts/doc/imgs/AROneSansBold.webp)
     #[cfg(feature = "static")]
-    AROneSansBold = 3 + Family::AROneSans as isize,
+    AROneSansBold = 3 + Family::AROneSans as u32,
     /// The [AR One Sans](https://fonts.google.com/specimen/AR+One+Sans) _variable_ font.
     ///
     /// Designed by _Niteesh Yadav_.
     ///
     /// ![AROneSans Variable](https://rana.github.io/google-fonts/doc/imgs/AROneSansVariable.webp)
     #[cfg(feature = "variable")]
-    AROneSansVariable = 4 + Family::AROneSans as isize,
+    AROneSansVariable = 4 + Family::AROneSans as u32,
     /// The [Abel](https://fonts.google.com/specimen/Abel) _regular_ font.
     ///
     /// Designed by _MADType_.
     ///
     /// ![Abel Regular](https://rana.github.io/google-fonts/doc/imgs/AbelRegular.webp)
     #[cfg(feature = "static")]
-    AbelRegular = Family::Abel as isize,
+    AbelRegular = Family::Abel as u32,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _regular_ font.
     ///
     /// Designed by _Mooniak_.
     ///
     /// ![AbhayaLibre Regular](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreRegular.webp)
     #[cfg(feature = "static")]
-    AbhayaLibreRegular = Family::AbhayaLibre as isize,
+    AbhayaLibreRegular = Family::AbhayaLibre as u32,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _medium_ font.
     ///
     /// Designed by _Mooniak_.
     ///
     /// ![AbhayaLibre Medium](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreMedium.webp)
     #[cfg(feature = "static")]
-    AbhayaLibreMedium = 1 + Family::AbhayaLibre as isize,
+    AbhayaLibreMedium = 1 + Family::AbhayaLibre as u32,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _semi bold_ font.
     ///
     /// Designed by _Mooniak_.
     ///
     /// ![AbhayaLibre SemiBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreSemiBold.webp)
     #[cfg(feature = "static")]
-    AbhayaLibreSemiBold = 2 + Family::AbhayaLibre as isize,
+    AbhayaLibreSemiBold = 2 + Family::AbhayaLibre as u32,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _bold_ font.
     ///
     /// Designed by _Mooniak_.
     ///
     /// ![AbhayaLibre Bold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreBold.webp)
     #[cfg(feature = "static")]
-    AbhayaLibreBold = 3 + Family::AbhayaLibre as isize,
+    AbhayaLibreBold = 3 + Family::AbhayaLibre as u32,
     /// The [Abhaya Libre](https://fonts.google.com/specimen/Abhaya+Libre) _extra bold_ font.
     ///
     /// Designed by _Mooniak_.
     ///
     /// ![AbhayaLibre ExtraBold](https://rana.github.io/google-fonts/doc/imgs/AbhayaLibreExtraBold.webp)
     #[cfg(feature = "static")]
-    AbhayaLibreExtraBold = 4 + Family::AbhayaLibre as isize,
+    AbhayaLibreExtraBold = 4 + Family::AbhayaLibre as u32,
     /// The [Aboreto](https://fonts.google.com/specimen/Aboreto) _regular_ font.
     ///
     /// Designed by _Dominik Jáger_.
     ///
     /// ![Aboreto Regular](https://rana.github.io/google-fonts/doc/imgs/AboretoRegular.webp)
     #[cfg(feature = "static")]
-    AboretoRegular = Family::Aboreto as isize,
+    AboretoRegular = Family::Aboreto as u32,
     /// The [Abril Fatface](https://fonts.google.com/specimen/Abril+Fatface) _regular_ font.
     ///
     /// Designed by _TypeTogether_.
     ///
     /// ![AbrilFatface Regular](https://rana.github.io/google-fonts/doc/imgs/AbrilFatfaceRegular.webp)
     #[cfg(feature = "static")]
-    AbrilFatfaceRegular = Family::AbrilFatface as isize,
+    AbrilFatfaceRegular = Family::AbrilFatface as u32,
     /// The [Abyssinica SIL](https://fonts.google.com/specimen/Abyssinica+SIL) _regular_ font.
     ///
     /// Designed by _SIL International_.
     ///
     /// ![AbyssinicaSIL Regular](https://rana.github.io/google-fonts/doc/imgs/AbyssinicaSILRegular.webp)
     #[cfg(feature = "static")]
-    AbyssinicaSILRegular = Family::AbyssinicaSIL as isize,
+    AbyssinicaSILRegular = Family::AbyssinicaSIL as u32,
     /// The [Aclonica](https://fonts.google.com/specimen/Aclonica) _regular_ font.
     ///
     /// Designed by _Astigmatic_.
     ///
     /// ![Aclonica Regular](https://rana.github.io/google-fonts/doc/imgs/AclonicaRegular.webp)
     #[cfg(feature = "static")]
-    AclonicaRegular = Family::Aclonica as isize,
+    AclonicaRegular = Family::Aclonica as u32,
     /// The [Acme](https://fonts.google.com/specimen/Acme) _regular_ font.
     ///
     /// Designed by _Juan Pablo del Peral_ and _Huerta Tipográfica_.
     ///
     /// ![Acme Regular](https://rana.github.io/google-fonts/doc/imgs/AcmeRegular.webp)
     #[cfg(feature = "static")]
-    AcmeRegular = Family::Acme as isize,
+    AcmeRegular = Family::Acme as u32,
     /// The [Actor](https://fonts.google.com/specimen/Actor) _regular_ font.
     ///
     /// Designed by _Thomas Junold_.
     ///
     /// ![Actor Regular](https://rana.github.io/google-fonts/doc/imgs/ActorRegular.webp)
     #[cfg(feature = "static")]
-    ActorRegular = Family::Actor as isize,
+    ActorRegular = Family::Actor as u32,
 }
 
 impl Font {
     /// Returns the _id_ for the [`Font`].
-    pub fn id(&self) -> isize {
-        *self as isize
+    pub fn id(&self) -> u32 {
+        *self as u32
     }
 
     /// Returns the [`Family`].
     pub fn family(&self) -> Family {
-        Family::from_id((self.id() / ID_INCREMENT) * ID_INCREMENT).unwrap()
+        Family::from_id((self.id() / ID_INCREMENT) * ID_INCREMENT)
     }
 
     /// Returns the index of the font file for the [`Family`].
@@ -231,7 +232,7 @@ impl Font {
     }
 
     /// Get font data and store locally.
-    pub fn get_and_cache(&self) -> Result<Vec<u8>, FontError> {
+    pub fn get_with_cache(&self) -> Result<Vec<u8>, FontError> {
         // Get the cache directory.
         match dirs::cache_dir() {
             None => Err(FontError::CacheDir(StringError::new(
@@ -276,51 +277,9 @@ impl Font {
         }
     }
 
-    /// Converts an `isize` to a [`Font`].
-    pub fn from_id(id: isize) -> Option<Self> {
-        match id {
-            #[cfg(feature = "static")]
-            0 => Some(Font::ABeeZeeRegular),
-            #[cfg(feature = "static")]
-            1 => Some(Font::ABeeZeeItalic),
-            #[cfg(feature = "static")]
-            1000 => Some(Font::ADLaMDisplayRegular),
-            #[cfg(feature = "static")]
-            2000 => Some(Font::AROneSansRegular),
-            #[cfg(feature = "static")]
-            2001 => Some(Font::AROneSansMedium),
-            #[cfg(feature = "static")]
-            2002 => Some(Font::AROneSansSemiBold),
-            #[cfg(feature = "static")]
-            2003 => Some(Font::AROneSansBold),
-            #[cfg(feature = "variable")]
-            2004 => Some(Font::AROneSansVariable),
-            #[cfg(feature = "static")]
-            3000 => Some(Font::AbelRegular),
-            #[cfg(feature = "static")]
-            4000 => Some(Font::AbhayaLibreRegular),
-            #[cfg(feature = "static")]
-            4001 => Some(Font::AbhayaLibreMedium),
-            #[cfg(feature = "static")]
-            4002 => Some(Font::AbhayaLibreSemiBold),
-            #[cfg(feature = "static")]
-            4003 => Some(Font::AbhayaLibreBold),
-            #[cfg(feature = "static")]
-            4004 => Some(Font::AbhayaLibreExtraBold),
-            #[cfg(feature = "static")]
-            5000 => Some(Font::AboretoRegular),
-            #[cfg(feature = "static")]
-            6000 => Some(Font::AbrilFatfaceRegular),
-            #[cfg(feature = "static")]
-            7000 => Some(Font::AbyssinicaSILRegular),
-            #[cfg(feature = "static")]
-            8000 => Some(Font::AclonicaRegular),
-            #[cfg(feature = "static")]
-            9000 => Some(Font::AcmeRegular),
-            #[cfg(feature = "static")]
-            10000 => Some(Font::ActorRegular),
-            _ => None,
-        }
+    /// Transforms an _id_ into a [`Font`].
+    pub(crate) fn from_id(id: u32) -> Self {
+        unsafe { std::mem::transmute(id) }
     }
     /// Returns the font [`Category`].
     pub fn category(&self) -> Category {
