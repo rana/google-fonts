@@ -1,15 +1,15 @@
 use anyhow::Result;
 use heck::ToTitleCase;
+use rayon::prelude::*;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use skia_safe::{surfaces, Color, EncodedImageFormat, Font, FontMgr, Paint};
 use std::{
-    cell::RefCell,
     collections::HashMap,
     fs::{self, File},
     io::{BufReader, Read, Write},
     path::PathBuf,
-    rc::Rc,
+    sync::{Arc, RwLock}, thread, time::Duration,
 };
 
 pub const FAMILY: &str = "Family";
@@ -39,7 +39,7 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
     let mut cat_names: Vec<String> = fam_metas.iter().map(|o| o.category.clone()).collect();
     cat_names.sort_unstable();
     cat_names.dedup();
-    let cats: Vec<Rc<RefCell<Cat>>> = cat_names
+    let cats: Vec<Arc<RwLock<Cat>>> = cat_names
         .into_iter()
         .map(|o| {
             rc(Cat {
@@ -55,7 +55,7 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
     let mut subset_names: Vec<String> = fam_metas.iter().flat_map(|o| o.subsets.clone()).collect();
     subset_names.sort_unstable();
     subset_names.dedup();
-    let subs: Vec<Rc<RefCell<Sub>>> = subset_names
+    let subs: Vec<Arc<RwLock<Sub>>> = subset_names
         .into_iter()
         .map(|o| {
             rc(Sub {
@@ -68,13 +68,13 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
         .collect();
 
     // Create families list.
-    let mut fams: Vec<Rc<RefCell<Fam>>> = Vec::with_capacity(fam_metas.len());
+    let mut fams: Vec<Arc<RwLock<Fam>>> = Vec::with_capacity(fam_metas.len());
     let mut id: u32 = 0;
     for fam_meta in fam_metas.iter() {
         // Find Cat.
         let cat = cats
             .iter()
-            .find(|o| o.borrow().name == fam_meta.category)
+            .find(|o| o.read().unwrap().name == fam_meta.category)
             .unwrap();
 
         // Create Fam.
@@ -91,15 +91,15 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
         });
 
         // Associate Cat.
-        cat.borrow_mut().fams.push(fam.clone());
+        cat.write().unwrap().fams.push(fam.clone());
 
         // Associate Subs.
         for sub in subs
             .iter()
-            .filter(|o| fam_meta.subsets.contains(&o.borrow().name))
+            .filter(|o| fam_meta.subsets.contains(&o.read().unwrap().name))
         {
-            sub.borrow_mut().fams.push(fam.clone());
-            fam.borrow_mut().subs.push(sub.clone());
+            sub.write().unwrap().fams.push(fam.clone());
+            fam.write().unwrap().subs.push(sub.clone());
         }
 
         fams.push(fam);
@@ -107,11 +107,11 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
     }
 
     // Create font list.
-    let mut fnts: Vec<Rc<RefCell<Fnt>>> = Vec::with_capacity(fam_metas.len());
+    let mut fnts: Vec<Arc<RwLock<Fnt>>> = Vec::with_capacity(fam_metas.len());
     let mut fnt_variants_cnt: HashMap<String, u8> = HashMap::with_capacity(fam_metas.len());
     for fam in fams.iter_mut() {
         // Get file list for network.
-        let fnt_fles = fam.borrow().get_file_list(&cli)?.file_refs;
+        let fnt_fles = fam.read().unwrap().get_file_list(&cli)?.file_refs;
         for (idx_fnt_fle, fnt_fle) in fnt_fles.iter().enumerate() {
             // Clean font name.
             // Remove file suffix `.ttf` from filename: ABeeZee-Regular.ttf.
@@ -145,19 +145,27 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
 
             // Associate Subs.
             for sub in subs.iter().filter(|o| {
-                fnt.borrow()
+                fnt.read()
+                    .unwrap()
                     .fam
-                    .borrow()
+                    .read()
+                    .unwrap()
                     .meta
                     .subsets
-                    .contains(&o.borrow().name)
+                    .contains(&o.read().unwrap().name)
             }) {
-                sub.borrow_mut().fnts.push(fnt.clone());
-                fnt.borrow_mut().subs.push(sub.clone());
+                sub.write().unwrap().fnts.push(fnt.clone());
+                fnt.write().unwrap().subs.push(sub.clone());
             }
 
-            fam.borrow_mut().fnts.push(fnt.clone());
-            fam.borrow_mut().cat.borrow_mut().fnts.push(fnt.clone());
+            fam.write().unwrap().fnts.push(fnt.clone());
+            fam.write()
+                .unwrap()
+                .cat
+                .write()
+                .unwrap()
+                .fnts
+                .push(fnt.clone());
             fnts.push(fnt);
         }
     }
@@ -198,7 +206,7 @@ pub fn build(pth: &str, is_in_prj_gen: bool) -> Result<()> {
     Ok(())
 }
 
-pub fn wrt_fle_family(fams: &[Rc<RefCell<Fam>>], buf: &mut String) {
+pub fn wrt_fle_family(fams: &[Arc<RwLock<Fam>>], buf: &mut String) {
     // Write enum.
     // pub enum Family {
     //     ABeeZee,
@@ -224,28 +232,28 @@ pub const ID_INCREMENT: u32 = 1000;
     for fam in fams.iter() {
         buf.push_str(&format!(
             "    /// The [{}](https://fonts.google.com/specimen/{}) font family.\n",
-            fam.borrow().name,
-            fam.borrow().name.replace(' ', "+"),
+            fam.read().unwrap().name,
+            fam.read().unwrap().name.replace(' ', "+"),
         ));
         buf.push_str("    ///\n");
         buf.push_str(&format!(
             "    /// Designed by {}.\n",
-            comma_and(&fam.borrow().meta.designers)
+            comma_and(&fam.read().unwrap().meta.designers)
         ));
 
-        for fnt in fam.borrow().fnts.iter().take(9) {
+        for fnt in fam.read().unwrap().fnts.iter().take(9) {
             buf.push_str("    ///\n");
             buf.push_str(&format!(
                 "    /// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.webp)\n",
-                fnt.borrow().name,
-                fnt.borrow().variant
+                fnt.read().unwrap().name,
+                fnt.read().unwrap().variant
             ));
         }
-        buf.push_str(&cfg_feature("    ", fam.borrow().features()));
+        buf.push_str(&cfg_feature("    ", fam.read().unwrap().features()));
         buf.push_str(&format!(
             "    {} = {},\n",
-            fam.borrow().variant,
-            fam.borrow().id
+            fam.read().unwrap().variant,
+            fam.read().unwrap().id
         ));
     }
     buf.push_str("}\n");
@@ -283,12 +291,12 @@ pub const ID_INCREMENT: u32 = 1000;
     buf.push_str("    pub fn name(&self) -> String {\n");
     buf.push_str("        match self {\n");
     for fam in fams.iter() {
-        buf.push_str(&cfg_feature("            ", fam.borrow().features()));
+        buf.push_str(&cfg_feature("            ", fam.read().unwrap().features()));
         buf.push_str(&format!(
             "            {}::{} => \"{}\".into(),\n",
             FAMILY,
-            fam.borrow().variant,
-            fam.borrow().name
+            fam.read().unwrap().variant,
+            fam.read().unwrap().name
         ));
     }
     buf.push_str("        }\n");
@@ -300,22 +308,22 @@ pub const ID_INCREMENT: u32 = 1000;
     buf.push_str(&format!("    pub fn fonts(&self) -> Vec<{}> {{\n", FONT));
     buf.push_str("        match self {\n");
     for fam in fams.iter() {
-        buf.push_str(&cfg_feature("            ", fam.borrow().features()));
+        buf.push_str(&cfg_feature("            ", fam.read().unwrap().features()));
         buf.push_str(&format!(
             "            {}::{} => {{\n",
             FAMILY,
-            fam.borrow().variant
+            fam.read().unwrap().variant
         ));
         buf.push_str("                vec![\n");
-        for fnt in fam.borrow().fnts.iter() {
+        for fnt in fam.read().unwrap().fnts.iter() {
             buf.push_str(&cfg_feature(
                 "                    ",
-                fnt.borrow().features(),
+                fnt.read().unwrap().features(),
             ));
             buf.push_str(&format!(
                 "                    {}::{},\n",
                 FONT,
-                fnt.borrow().variant
+                fnt.read().unwrap().variant
             ));
         }
         buf.push_str("                ]\n");
@@ -333,13 +341,13 @@ pub const ID_INCREMENT: u32 = 1000;
     ));
     buf.push_str("        match self {\n");
     for fam in fams.iter() {
-        buf.push_str(&cfg_feature("            ", fam.borrow().features()));
+        buf.push_str(&cfg_feature("            ", fam.read().unwrap().features()));
         buf.push_str(&format!(
             "            {}::{} => {}::{},\n",
             FAMILY,
-            fam.borrow().variant,
+            fam.read().unwrap().variant,
             CATEGORY,
-            fam.borrow().cat.borrow().variant
+            fam.read().unwrap().cat.read().unwrap().variant
         ));
     }
     buf.push_str("        }\n");
@@ -348,7 +356,7 @@ pub const ID_INCREMENT: u32 = 1000;
     buf.push_str("}\n"); // end impl Family
 }
 
-pub fn wrt_fle_font(fnts: &[Rc<RefCell<Fnt>>], buf: &mut String) {
+pub fn wrt_fle_font(fnts: &[Arc<RwLock<Fnt>>], buf: &mut String) {
     // Write enum.
     // pub enum Font {
     //     ABeeZeeRegular,
@@ -368,10 +376,10 @@ use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
 pub enum Font {
 "#);
     let mut id: u16 = 0;
-    let mut fam_prv_o: Option<Rc<RefCell<Fam>>> = None;
+    let mut fam_prv_o: Option<Arc<RwLock<Fam>>> = None;
     for fnt in fnts.iter() {
         if let Some(fam_prv) = fam_prv_o {
-            if fnt.borrow().fam.borrow().variant == fam_prv.borrow().variant {
+            if fnt.read().unwrap().fam.read().unwrap().variant == fam_prv.read().unwrap().variant {
                 id += 1;
             } else {
                 id = 0;
@@ -380,38 +388,44 @@ pub enum Font {
 
         buf.push_str(&format!(
             "    /// The [{}](https://fonts.google.com/specimen/{}) _{}_ font.\n",
-            fnt.borrow().fam.borrow().name,
-            &fnt.borrow().fam.borrow().name.replace(' ', "+"),
-            fnt.borrow().name_suffix()
+            fnt.read().unwrap().fam.read().unwrap().name,
+            &fnt.read()
+                .unwrap()
+                .fam
+                .read()
+                .unwrap()
+                .name
+                .replace(' ', "+"),
+            fnt.read().unwrap().name_suffix()
         ));
         buf.push_str("    ///\n");
         buf.push_str(&format!(
             "    /// Designed by {}.\n",
-            comma_and(&fnt.borrow().fam.borrow().meta.designers)
+            comma_and(&fnt.read().unwrap().fam.read().unwrap().meta.designers)
         ));
         buf.push_str("    ///\n");
         buf.push_str(&format!(
             "    /// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.webp)\n",
-            fnt.borrow().name,
-            fnt.borrow().variant
+            fnt.read().unwrap().name,
+            fnt.read().unwrap().variant
         ));
-        buf.push_str(&cfg_feature("    ", fnt.borrow().features()));
+        buf.push_str(&cfg_feature("    ", fnt.read().unwrap().features()));
         if id == 0 {
             buf.push_str(&format!(
                 "    {} = Family::{} as u32,\n",
-                fnt.borrow().variant,
-                fnt.borrow().fam.borrow().variant
+                fnt.read().unwrap().variant,
+                fnt.read().unwrap().fam.read().unwrap().variant
             ));
         } else {
             buf.push_str(&format!(
                 "    {} = {} + Family::{} as u32,\n",
-                fnt.borrow().variant,
+                fnt.read().unwrap().variant,
                 id,
-                fnt.borrow().fam.borrow().variant
+                fnt.read().unwrap().fam.read().unwrap().variant
             ));
         }
 
-        fam_prv_o = Some(fnt.borrow().fam.clone());
+        fam_prv_o = Some(fnt.read().unwrap().fam.clone());
     }
     buf.push_str("}\n"); // end enum Font
 
@@ -564,13 +578,21 @@ impl Font {
     ));
     buf.push_str("        match self {\n");
     for fnt in fnts.iter() {
-        buf.push_str(&cfg_feature("            ", fnt.borrow().features()));
+        buf.push_str(&cfg_feature("            ", fnt.read().unwrap().features()));
         buf.push_str(&format!(
             "            {}::{} => {}::{},\n",
             FONT,
-            fnt.borrow().variant,
+            fnt.read().unwrap().variant,
             CATEGORY,
-            fnt.borrow().fam.borrow().cat.borrow().variant
+            fnt.read()
+                .unwrap()
+                .fam
+                .read()
+                .unwrap()
+                .cat
+                .read()
+                .unwrap()
+                .variant
         ));
     }
     buf.push_str("        }\n");
@@ -602,7 +624,7 @@ pub struct FileRef {
     );
 }
 
-pub fn wrt_fle_category(cats: &[Rc<RefCell<Cat>>], buf: &mut String) {
+pub fn wrt_fle_category(cats: &[Arc<RwLock<Cat>>], buf: &mut String) {
     // Write enum.
     // pub enum Category {
     //     ABeeZee,
@@ -622,9 +644,9 @@ use crate::font::Font;
     for cat in cats.iter() {
         buf.push_str(&format!(
             "    /// The _{}_ font category.\n",
-            cat.borrow().name
+            cat.read().unwrap().name
         ));
-        buf.push_str(&format!("    {},\n", cat.borrow().variant));
+        buf.push_str(&format!("    {},\n", cat.read().unwrap().variant));
     }
     buf.push_str("}\n"); // end enum Category
 
@@ -644,8 +666,8 @@ use crate::font::Font;
         buf.push_str(&format!(
             "            {}::{} => \"{}\".into(),\n",
             CATEGORY,
-            cat.borrow().variant,
-            cat.borrow().name
+            cat.read().unwrap().variant,
+            cat.read().unwrap().name
         ));
     }
     buf.push_str("        }\n");
@@ -663,18 +685,18 @@ use crate::font::Font;
         buf.push_str(&format!(
             "            {}::{} => {{\n",
             CATEGORY,
-            cat.borrow().variant
+            cat.read().unwrap().variant
         ));
         buf.push_str("                vec![\n");
-        for fam in cat.borrow().fams.iter() {
+        for fam in cat.read().unwrap().fams.iter() {
             buf.push_str(&cfg_feature(
                 "                    ",
-                fam.borrow().features(),
+                fam.read().unwrap().features(),
             ));
             buf.push_str(&format!(
                 "                    {}::{},\n",
                 FAMILY,
-                fam.borrow().variant
+                fam.read().unwrap().variant
             ));
         }
         buf.push_str("                ]\n");
@@ -692,18 +714,18 @@ use crate::font::Font;
         buf.push_str(&format!(
             "            {}::{} => {{\n",
             CATEGORY,
-            cat.borrow().variant
+            cat.read().unwrap().variant
         ));
         buf.push_str("                vec![\n");
-        for fnt in cat.borrow().fnts.iter() {
+        for fnt in cat.read().unwrap().fnts.iter() {
             buf.push_str(&cfg_feature(
                 "                    ",
-                fnt.borrow().features(),
+                fnt.read().unwrap().features(),
             ));
             buf.push_str(&format!(
                 "                    {}::{},\n",
                 FONT,
-                fnt.borrow().variant
+                fnt.read().unwrap().variant
             ));
         }
         buf.push_str("                ]\n");
@@ -715,7 +737,7 @@ use crate::font::Font;
     buf.push_str("}\n"); // end impl Family
 }
 
-pub fn wrt_fle_subset(subs: &[Rc<RefCell<Sub>>], buf: &mut String) {
+pub fn wrt_fle_subset(subs: &[Arc<RwLock<Sub>>], buf: &mut String) {
     // Write enum.
     // pub enum Subset {
     //     Latin,
@@ -735,9 +757,9 @@ use crate::font::Font;
     for sub in subs.iter() {
         buf.push_str(&format!(
             "    /// The _{}_ font subset.\n",
-            sub.borrow().name
+            sub.read().unwrap().name
         ));
-        buf.push_str(&format!("    {},\n", sub.borrow().variant));
+        buf.push_str(&format!("    {},\n", sub.read().unwrap().variant));
     }
     buf.push_str("}\n"); // end enum Subset
 
@@ -757,18 +779,18 @@ use crate::font::Font;
         buf.push_str(&format!(
             "            {}::{} => {{\n",
             SUBSET,
-            sub.borrow().variant
+            sub.read().unwrap().variant
         ));
         buf.push_str("                vec![\n");
-        for fam in sub.borrow().fams.iter() {
+        for fam in sub.read().unwrap().fams.iter() {
             buf.push_str(&cfg_feature(
                 "                    ",
-                fam.borrow().features(),
+                fam.read().unwrap().features(),
             ));
             buf.push_str(&format!(
                 "                    {}::{},\n",
                 FAMILY,
-                fam.borrow().variant
+                fam.read().unwrap().variant
             ));
         }
         buf.push_str("                ]\n");
@@ -786,18 +808,18 @@ use crate::font::Font;
         buf.push_str(&format!(
             "            {}::{} => {{\n",
             SUBSET,
-            sub.borrow().variant
+            sub.read().unwrap().variant
         ));
         buf.push_str("                vec![\n");
-        for fnt in sub.borrow().fnts.iter() {
+        for fnt in sub.read().unwrap().fnts.iter() {
             buf.push_str(&cfg_feature(
                 "                    ",
-                fnt.borrow().features(),
+                fnt.read().unwrap().features(),
             ));
             buf.push_str(&format!(
                 "                    {}::{},\n",
                 FONT,
-                fnt.borrow().variant
+                fnt.read().unwrap().variant
             ));
         }
         buf.push_str("                ]\n");
@@ -935,7 +957,7 @@ impl Error for StringError {}
     );
 }
 
-pub fn wrt_fle_lib(fnts: &[Rc<RefCell<Fnt>>], buf: &mut String, is_in_prj_gen: bool) {
+pub fn wrt_fle_lib(fnts: &[Arc<RwLock<Fnt>>], buf: &mut String, is_in_prj_gen: bool) {
     if is_in_prj_gen {
         buf.push_str(
             r#"
@@ -970,32 +992,38 @@ use crate::error::FontError;
         buf.push('\n');
         buf.push_str(&format!(
             "/// Get font data for the [{}](https://fonts.google.com/specimen/{}) _{}_ font.\n",
-            fnt.borrow().fam.borrow().name,
-            fnt.borrow().fam.borrow().name.replace(' ', "+"),
-            fnt.borrow().name_suffix(),
+            fnt.read().unwrap().fam.read().unwrap().name,
+            fnt.read()
+                .unwrap()
+                .fam
+                .read()
+                .unwrap()
+                .name
+                .replace(' ', "+"),
+            fnt.read().unwrap().name_suffix(),
         ));
         buf.push_str("///\n");
         buf.push_str("/// Loaded from the network and cached to disk.\n");
         buf.push_str("///\n");
         buf.push_str(&format!(
             "/// Designed by {}.\n",
-            comma_and(&fnt.borrow().fam.borrow().meta.designers)
+            comma_and(&fnt.read().unwrap().fam.read().unwrap().meta.designers)
         ));
         buf.push_str("///\n");
         buf.push_str(&format!(
             "/// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.webp)\n",
-            fnt.borrow().name,
-            fnt.borrow().variant
+            fnt.read().unwrap().name,
+            fnt.read().unwrap().variant
         ));
-        buf.push_str(&cfg_feature("", fnt.borrow().features()));
+        buf.push_str(&cfg_feature("", fnt.read().unwrap().features()));
         buf.push_str(&format!(
             "pub fn {}() -> Result<Vec<u8>, FontError> {{\n",
-            fnt.borrow().fn_name()
+            fnt.read().unwrap().fn_name()
         ));
         buf.push_str(&format!(
             "    {}::{}.get_with_cache()\n",
             FONT,
-            fnt.borrow().variant
+            fnt.read().unwrap().variant
         ));
         buf.push_str("}\n");
     }
@@ -1022,11 +1050,14 @@ use crate::error::FontError;
     for fnt in fnts.iter() {
         buf.push('\n');
         buf.push_str("    #[test]\n");
-        buf.push_str(&cfg_feature("    ", fnt.borrow().features()));
-        buf.push_str(&format!("    fn test_{}() {{\n", fnt.borrow().fn_name()));
+        buf.push_str(&cfg_feature("    ", fnt.read().unwrap().features()));
+        buf.push_str(&format!(
+            "    fn test_{}() {{\n",
+            fnt.read().unwrap().fn_name()
+        ));
         buf.push_str(&format!(
             "        let result = {}();\n",
-            fnt.borrow().fn_name()
+            fnt.read().unwrap().fn_name()
         ));
         buf.push_str("        assert!(result.is_ok());\n");
         buf.push_str("        let font_data = result.unwrap();\n");
@@ -1037,8 +1068,8 @@ use crate::error::FontError;
     buf.push_str("}\n"); // end mod tests
 }
 
-pub fn wrt_fle_imgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
-    let mut pth = PathBuf::from("../doc/imgs");
+pub fn wrt_fle_imgs(fnts: &[Arc<RwLock<Fnt>>], cli: &Client) -> Result<()> {
+    let pth = PathBuf::from("../doc/imgs");
 
     // Re-create image directory.
     // Ensure we don't keep images for deleted fonts.
@@ -1047,17 +1078,17 @@ pub fn wrt_fle_imgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
     }
     fs::create_dir_all(&pth)?;
 
-    let mgr = FontMgr::new();
-    let mut paint1 = Paint::default();
-    paint1
-        .set_color(Color::from_rgb(255, 255, 255))
-        .set_anti_alias(false);
-    for fnt in fnts.iter() {
+    fnts.par_iter().for_each(|fnt| {
         // Get font.
-        let fnt_dat = fnt.borrow().get(cli)?;
+        let mgr = FontMgr::new();
+        let mut paint1 = Paint::default();
+        paint1
+            .set_color(Color::from_rgb(255, 255, 255))
+            .set_anti_alias(false);
+        let fnt_dat = fnt.read().unwrap().get(cli).unwrap();
         let face = mgr.new_from_data(&fnt_dat, None).unwrap();
         let font = &Font::from_typeface(face, 18.0);
-        let name = &fnt.borrow().name;
+        let name = &fnt.read().unwrap().name;
 
         // Measure font.
         let (_, mut rect) = font.measure_str(name, Some(&paint1));
@@ -1088,11 +1119,14 @@ pub fn wrt_fle_imgs(fnts: &[Rc<RefCell<Fnt>>], cli: &Client) -> Result<()> {
             .unwrap();
 
         // Save file.
-        pth.push(&fnt.borrow().variant);
-        pth.set_extension("webp");
-        fs::write(&pth, data.as_bytes())?;
-        pth.pop();
-    }
+        let mut pth_clone = pth.clone();
+        pth_clone.push(&fnt.read().unwrap().variant);
+        pth_clone.set_extension("webp");
+        fs::write(&pth_clone, data.as_bytes()).unwrap();
+
+        // Sleep to allow proper rate limit.
+        thread::sleep(Duration::from_secs(1));
+    });
 
     Ok(())
 }
@@ -1175,8 +1209,8 @@ pub fn comma_and(vals: &[String]) -> String {
     }
 }
 
-pub fn rc<T>(v: T) -> Rc<RefCell<T>> {
-    Rc::new(RefCell::new(v))
+pub fn rc<T>(v: T) -> Arc<RwLock<T>> {
+    Arc::new(RwLock::new(v))
 }
 
 // Request URL: https://fonts.google.com/metadata/fonts/Roboto
@@ -1383,43 +1417,43 @@ pub struct Fam {
     pub id: u32,
     pub name: String,
     pub variant: String,
-    pub cat: Rc<RefCell<Cat>>,
+    pub cat: Arc<RwLock<Cat>>,
     pub meta: FamilyMetadata,
-    pub fnts: Vec<Rc<RefCell<Fnt>>>,
-    pub subs: Vec<Rc<RefCell<Sub>>>,
+    pub fnts: Vec<Arc<RwLock<Fnt>>>,
+    pub subs: Vec<Arc<RwLock<Sub>>>,
 }
 #[derive(Debug, Clone)]
 pub struct Fnt {
     pub id: u32,
     pub name: String,
     pub variant: String,
-    pub fam: Rc<RefCell<Fam>>,
-    pub subs: Vec<Rc<RefCell<Sub>>>,
+    pub fam: Arc<RwLock<Fam>>,
+    pub subs: Vec<Arc<RwLock<Sub>>>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Cat {
     pub name: String,
     pub variant: String,
-    pub fams: Vec<Rc<RefCell<Fam>>>,
-    pub fnts: Vec<Rc<RefCell<Fnt>>>,
+    pub fams: Vec<Arc<RwLock<Fam>>>,
+    pub fnts: Vec<Arc<RwLock<Fnt>>>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Sub {
     pub name: String,
     pub variant: String,
-    pub fams: Vec<Rc<RefCell<Fam>>>,
-    pub fnts: Vec<Rc<RefCell<Fnt>>>,
+    pub fams: Vec<Arc<RwLock<Fam>>>,
+    pub fnts: Vec<Arc<RwLock<Fnt>>>,
 }
 
 impl Fam {
     pub fn features(&self) -> Vec<String> {
         let mut ret = Vec::new();
-        if self.fnts.iter().any(|o| o.borrow().is_variable()) {
+        if self.fnts.iter().any(|o| o.read().unwrap().is_variable()) {
             ret.push(VARIABLE.into());
         }
-        if self.fnts.iter().any(|o| o.borrow().is_static()) {
+        if self.fnts.iter().any(|o| o.read().unwrap().is_static()) {
             ret.push(STATIC.into());
         }
         ret
@@ -1487,7 +1521,7 @@ impl Fnt {
     /// Get the font name suffix. For example, _regular_.
     pub fn name_suffix(&self) -> String {
         self.name
-            .replace(&self.fam.borrow().variant, "")
+            .replace(&self.fam.read().unwrap().variant, "")
             .trim()
             .to_title_case()
             .to_lowercase()
@@ -1497,11 +1531,16 @@ impl Fnt {
     pub fn fn_name(&self) -> String {
         let suffix = self
             .variant
-            .replace(&self.fam.borrow().variant, "")
+            .replace(&self.fam.read().unwrap().variant, "")
             .trim()
             .to_title_case()
             .to_lowercase();
-        format!("{} {}", self.fam.borrow().name.to_lowercase(), suffix).replace(' ', "_")
+        format!(
+            "{} {}",
+            self.fam.read().unwrap().name.to_lowercase(),
+            suffix
+        )
+        .replace(' ', "_")
     }
 
     /// Get the font data from network or cache.
@@ -1519,16 +1558,17 @@ impl Fnt {
             return Ok(buffer);
         }
 
-        let file_refs = self.fam.borrow().get_file_list(cli)?.file_refs;
+        let file_refs = self.fam.read().unwrap().get_file_list(cli)?.file_refs;
 
         // Get the font index.
         let (idx, _) = self
             .fam
-            .borrow()
+            .read()
+            .unwrap()
             .fnts
             .iter()
             .enumerate()
-            .find(|(_, o)| o.borrow().name == self.name)
+            .find(|(_, o)| o.read().unwrap().name == self.name)
             .unwrap();
 
         // Get the font file url.
