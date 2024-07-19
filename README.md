@@ -1,6 +1,6 @@
 # google-fonts
 
-Download and cache TTF fonts from Google using Rust.
+Download and cache TTF fonts from Google.
 
 There are `1,708` font families, and `11,689` fonts.
 
