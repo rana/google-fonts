@@ -2,9 +2,9 @@
 
 Download and cache TTF fonts from Google.
 
-There are `1,708` font families, and `11,689` fonts.
+`11,689` fonts with `1,708` font families.
 
-Similar to the [Downloadable Fonts](https://developer.android.com/develop/ui/views/text-and-emoji/downloadable-fonts) feature in Android Studio, and the Google [Web Fonts](https://developers.google.com/fonts/docs/developer_api) API.
+Similar to [Downloadable Fonts](https://developer.android.com/develop/ui/views/text-and-emoji/downloadable-fonts) in Android Studio, and [Web Fonts](https://developers.google.com/fonts/docs/developer_api) Google API.
 
 # Example
 
