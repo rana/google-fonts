@@ -1227,7 +1227,7 @@ pub fn wrt_fle_cargo_toml(dir_pth: &str) -> Result<()> {
     man.features.clear();
 
     // Add features.
-    man.features.insert("default".into(), vec![FULL.into()]);
+    man.features.insert("default".into(), vec![VARIABLE.into()]);
     man.features
         .insert(FULL.into(), vec![VARIABLE.into(), STATIC.into()]);
     man.features.insert(VARIABLE.into(), vec![]);
