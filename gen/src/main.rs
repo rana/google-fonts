@@ -540,7 +540,7 @@ impl Font {
     // Write `get`.
     buf.push_str(
         r#"
-    /// Get font data from the network.
+    /// Get TTF font data from the network.
     pub fn get(&self) -> Result<Vec<u8>, FontError> {
         // Get file info from the network.
         let result = Client::new()
@@ -587,7 +587,7 @@ impl Font {
         }
     }
 
-    /// Get font data and store locally.
+    /// Get TTF font data and store locally.
     pub fn get_with_cache(&self) -> Result<Vec<u8>, FontError> {
         // Get the cache directory.
         match dirs::cache_dir() {
