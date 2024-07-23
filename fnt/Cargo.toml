@@ -1,6 +1,6 @@
 [package]
 name = "google-fonts"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 authors = ["Rana Ian"]
 description = "Download and cache TTF fonts from Google."
@@ -31,7 +31,7 @@ features = ["derive", "strum_macros"]
 ttf-parser = "0.24.0"
 
 [features]
-default = ["full"]
+default = ["variable"]
 full = ["variable", "static"]
 static = []
 variable = []

@@ -41,13 +41,13 @@ fn main() {
 * `static` enables only fonts with _static font technology_.
 * `full` enables both `variable` and `static` features.
 
-`full` is the default feature.
+`variable` is the default feature.
 
 Variable font technology is newer, more flexible, and provides style variations in one or two files. Static font technology uses more font files to accomplish the same thing. A majority of the fonts are in the `static` feature. 
 
 Prefer the `variable` feature when possible.
 
-Enable the `variable` feature to significantly reduce build time and crate size.
+Enable the `variable` feature to significantly improve build time, crate size, and rust-analyzer performance.
 
 # Doc comment font images
 
