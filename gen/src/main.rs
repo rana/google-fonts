@@ -1,7 +1,9 @@
 use anyhow::Result;
 use heck::ToTitleCase;
+use lazy_static::lazy_static;
 use rayon::prelude::*;
 use reqwest::blocking::Client;
+use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use skia_safe::{surfaces, Color, EncodedImageFormat, Font, FontMgr, Paint};
 use std::{
@@ -23,9 +25,11 @@ pub const STATIC: &str = "static";
 pub const FULL: &str = "full";
 pub const TAKE: usize = usize::MAX;
 pub const FAMILY_ID_INCREMENT: u32 = 1000; // The Roboto Serif font family has 721 fonts.
+pub const MAX_RETRIES: usize = 9;
+pub const RETRY_DELAY: Duration = Duration::from_millis(500);
 
 pub fn main() -> Result<()> {
-    build("../fnt/src/", false)
+    build("../fnt/src/", true)
 }
 
 pub fn build(pth: &str, wrt_imgs: bool) -> Result<()> {
@@ -35,6 +39,7 @@ pub fn build(pth: &str, wrt_imgs: bool) -> Result<()> {
     let fam_metas: Vec<FamilyMetadata> = get_family_metadata_list(&cli)?
         .into_iter()
         .take(TAKE)
+        // .filter(|o| o.family.contains("Jomhuria"))
         .collect();
 
     // Create category list.
@@ -62,7 +67,7 @@ pub fn build(pth: &str, wrt_imgs: bool) -> Result<()> {
         .map(|o| {
             rc(Sub {
                 name: o.clone(),
-                variant: o.to_title_case().replace(' ', ""),
+                variant: sub_variant(o),
                 fams: Vec::new(),
                 fnts: Vec::new(),
             })
@@ -181,7 +186,7 @@ pub fn build(pth: &str, wrt_imgs: bool) -> Result<()> {
 
     // Write Family file.
     let mut buf = String::with_capacity(1 << 20); // 1MB
-    wrt_fle_family(&fams, &mut buf);
+    wrt_fle_family(&fams, &cli, &mut buf)?;
     fs::write(format!("{}family.rs", pth), buf)?;
 
     let mut buf = String::with_capacity(1 << 20); // 1MB
@@ -209,16 +214,18 @@ pub fn build(pth: &str, wrt_imgs: bool) -> Result<()> {
     Ok(())
 }
 
-pub fn wrt_fle_family(fams: &[Arc<RwLock<Fam>>], buf: &mut String) {
+pub fn wrt_fle_family(fams: &[Arc<RwLock<Fam>>], cli: &Client, buf: &mut String) -> Result<()> {
     // Write enum.
     // pub enum Family {
     //     ABeeZee,
     // }
     buf.push_str(r#"
 use serde::{Deserialize, Serialize};
+use std::ops::RangeInclusive;
 use strum::{Display, EnumCount, EnumIter, EnumString, AsRefStr};
 use crate::font::Font;
 use crate::category::Category;
+use crate::subset::Subset;
 
 /// The _family id_ increment.
 /// 
@@ -233,17 +240,15 @@ pub const ID_INCREMENT: u32 = 1000;
 "#);
     buf.push_str(&format!("pub enum {} {{\n", FAMILY));
     for fam in fams.iter() {
+        // Get family description.
+        let dtl = fam.read().unwrap().get_metadata_detail(cli)?;
+        // Write title sentence.
         buf.push_str(&format!(
             "    /// The [{}](https://fonts.google.com/specimen/{}) font family.\n",
             fam.read().unwrap().name,
             fam.read().unwrap().name.replace(' ', "+"),
         ));
-        buf.push_str("    ///\n");
-        buf.push_str(&format!(
-            "    /// Designed by {}.\n",
-            comma_and(&fam.read().unwrap().meta.designers)
-        ));
-
+        // Write image.
         for fnt in fam.read().unwrap().fnts.iter().take(9) {
             buf.push_str("    ///\n");
             buf.push_str(&format!(
@@ -252,6 +257,22 @@ pub const ID_INCREMENT: u32 = 1000;
                 fnt.read().unwrap().variant
             ));
         }
+        // Write description.
+        let html = unescaper::unescape(&dtl.description).unwrap();
+        let fragment = Html::parse_fragment(&html);
+        let selector = Selector::parse("p").unwrap();
+        for elm in fragment.select(&selector) {
+            let txt = elm.inner_html().trim().replace('\n', " ");
+            buf.push_str("    ///\n");
+            buf.push_str(&format!("    /// {}\n", txt));
+        }
+        // Write designer.
+        buf.push_str("    ///\n");
+        buf.push_str(&format!(
+            "    /// Designed by {}.\n",
+            comma_and(&fam.read().unwrap().meta.designers)
+        ));
+        // Write variant.
         buf.push_str(&cfg_feature("    ", fam.read().unwrap().features()));
         buf.push_str(&format!(
             "    {} = {},\n",
@@ -286,9 +307,6 @@ pub const ID_INCREMENT: u32 = 1000;
     buf.push_str("    }\n"); // end from_id
 
     // Write `name`.
-    // pub fn name(&self) -> String {
-    //     self.as_ref().into()
-    // }
     buf.push('\n');
     buf.push_str("    /// The name of the font [`Family`] with spaces.\n");
     buf.push_str("    pub fn name(&self) -> String {\n");
@@ -356,7 +374,59 @@ pub const ID_INCREMENT: u32 = 1000;
     buf.push_str("        }\n");
     buf.push_str("    }\n"); // end `category`
 
+    // Write `coverage`
+    buf.push('\n');
+    buf.push_str("    /// Unicode characters supported by the [`Family`].\n");
+    buf.push_str(&format!(
+        "    pub fn coverage(&self) -> Vec<({}, Vec<RangeInclusive<u32>>)> {{\n",
+        SUBSET
+    ));
+    buf.push_str("        match self {\n");
+    for fam in fams.iter() {
+        let dtl = fam.read().unwrap().get_metadata_detail(cli)?;
+
+        buf.push_str(&cfg_feature("            ", fam.read().unwrap().features()));
+        buf.push_str(&format!(
+            "            {}::{} => {{\n",
+            FAMILY,
+            fam.read().unwrap().variant
+        ));
+        buf.push_str("                vec![\n");
+
+        let mut sorted_keys: Vec<_> = dtl.coverage.keys().cloned().collect::<Vec<_>>();
+        sorted_keys.sort();
+        for key in sorted_keys {
+            buf.push_str(&format!(
+                "                    ({}::{}, vec![",
+                SUBSET,
+                sub_variant(key.clone())
+            ));
+
+            // Parse unicode character ranges.
+            for (idx, prt) in dtl.coverage.get(&key).unwrap().split(',').enumerate() {
+                let mut prts = prt.split('-').map(|s| s.parse::<u32>().unwrap());
+                let fst = prts.next().unwrap();
+                let lst = match prts.next() {
+                    Some(lst_val) => lst_val,
+                    None => fst,
+                };
+                // ranges.push(start..=end);
+                let cma = if idx == 0 { "" } else { "," };
+                buf.push_str(&format!("{}{}..={}", cma, fst, lst));
+            }
+
+            buf.push_str("]),\n");
+        }
+
+        buf.push_str("                ]\n");
+        buf.push_str("            }\n");
+    }
+    buf.push_str("        }\n");
+    buf.push_str("    }\n"); // end coverage
+
     buf.push_str("}\n"); // end impl Family
+
+    Ok(())
 }
 
 pub fn wrt_fle_font(fnts: &[Arc<RwLock<Fnt>>], buf: &mut String) {
@@ -403,14 +473,14 @@ pub enum Font {
         ));
         buf.push_str("    ///\n");
         buf.push_str(&format!(
-            "    /// Designed by {}.\n",
-            comma_and(&fnt.read().unwrap().fam.read().unwrap().meta.designers)
-        ));
-        buf.push_str("    ///\n");
-        buf.push_str(&format!(
             "    /// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.webp)\n",
             fnt.read().unwrap().name,
             fnt.read().unwrap().variant
+        ));
+        buf.push_str("    ///\n");
+        buf.push_str(&format!(
+            "    /// Designed by {}.\n",
+            comma_and(&fnt.read().unwrap().fam.read().unwrap().meta.designers)
         ));
         buf.push_str(&cfg_feature("    ", fnt.read().unwrap().features()));
         if id == 0 {
@@ -995,14 +1065,14 @@ pub use crate::subset::*;
         buf.push_str("/// Loaded from the network and cached to disk.\n");
         buf.push_str("///\n");
         buf.push_str(&format!(
-            "/// Designed by {}.\n",
-            comma_and(&fnt.read().unwrap().fam.read().unwrap().meta.designers)
-        ));
-        buf.push_str("///\n");
-        buf.push_str(&format!(
             "/// ![{}](https://rana.github.io/google-fonts/doc/imgs/{}.webp)\n",
             fnt.read().unwrap().name,
             fnt.read().unwrap().variant
+        ));
+        buf.push_str("///\n");
+        buf.push_str(&format!(
+            "/// Designed by {}.\n",
+            comma_and(&fnt.read().unwrap().fam.read().unwrap().meta.designers)
         ));
         buf.push_str(&cfg_feature("", fnt.read().unwrap().features()));
         buf.push_str(&format!(
@@ -1068,54 +1138,78 @@ pub fn wrt_fle_imgs(fnts: &[Arc<RwLock<Fnt>>], cli: &Client) -> Result<()> {
     fs::create_dir_all(&pth)?;
 
     fnts.par_iter().for_each(|fnt| {
-        // Get font.
-        let mgr = FontMgr::new();
-        let mut paint1 = Paint::default();
-        paint1
-            .set_color(Color::from_rgb(255, 255, 255))
-            .set_anti_alias(false);
-        let fnt_dat = fnt.read().unwrap().get(cli).unwrap();
-        let face = mgr.new_from_data(&fnt_dat, None).unwrap();
-        let font = &Font::from_typeface(face, 18.0);
-        let name = &fnt.read().unwrap().name;
-
-        // Measure font.
-        let (_, mut rect) = font.measure_str(name, Some(&paint1));
-        let mrg: f32 = 4.0;
-
-        // Add margin to image.
-        rect.left -= mrg;
-        rect.right += mrg;
-        rect.bottom += mrg;
-        rect.top -= mrg;
-
-        // Draw image.
-        // let size = rect.size();
-        // let canvas = skia_safe::svg::Canvas::new(Rect::from_size(size), None);
-        // canvas.draw_str(name, (mrg, size.height - rect.bottom), font, &paint1);
-        // let data = canvas.end();
-        let size = (rect.size().width as i32, rect.size().height as i32);
-        let mut surface = surfaces::raster_n32_premul(size).unwrap();
-        let canvas = surface.canvas();
-        canvas.draw_str(name, (mrg, rect.size().height - rect.bottom), font, &paint1);
-        let image = surface.image_snapshot();
-        let data = image
-            .encode(
-                &mut surface.direct_context(),
-                EncodedImageFormat::WEBP,
-                Some(u32::MAX),
-            )
-            .unwrap();
-
-        // Save file.
-        let mut pth_clone = pth.clone();
-        pth_clone.push(&fnt.read().unwrap().variant);
-        pth_clone.set_extension("webp");
-        fs::write(&pth_clone, data.as_bytes()).unwrap();
-
-        // Sleep to allow proper rate limit.
-        thread::sleep(Duration::from_secs(1));
+        let mut attempt = 0;
+        loop {
+            attempt += 1;
+            match process_font(fnt, cli, pth.clone()) {
+                Ok(_) => break, // If successful, break the loop
+                Err(e) => {
+                    if attempt >= MAX_RETRIES {
+                        eprintln!(
+                            "Failed to process font {} after {} attempts: {}",
+                            fnt.read().unwrap().name,
+                            attempt,
+                            e
+                        );
+                        break;
+                    }
+                    eprintln!(
+                        "Error processing font {} (attempt {}): {}. Retrying...",
+                        fnt.read().unwrap().name,
+                        attempt,
+                        e
+                    );
+                    thread::sleep(RETRY_DELAY); // Sleep before retrying
+                }
+            }
+        }
     });
+
+    Ok(())
+}
+
+fn process_font(fnt: &Arc<RwLock<Fnt>>, cli: &Client, mut pth: PathBuf) -> Result<()> {
+    // Get font.
+    let mgr = FontMgr::new();
+    let mut paint1 = Paint::default();
+    paint1
+        .set_color(Color::from_rgb(255, 255, 255))
+        .set_anti_alias(false);
+    let fnt_dat = fnt.read().unwrap().get(cli)?;
+    let face = mgr.new_from_data(&fnt_dat, None).unwrap();
+    let font = &Font::from_typeface(face, 18.0);
+
+    // Get sample text. Written for each language.
+    let txt = fnt.read().unwrap().get_sampletext(cli)?;
+
+    // Measure font.
+    let (_, mut rect) = font.measure_str(&txt, Some(&paint1));
+    let mrg: f32 = 4.0;
+
+    // Add margin to image.
+    rect.left -= mrg;
+    rect.right += mrg;
+    rect.bottom += mrg;
+    rect.top -= mrg;
+
+    // Draw image.
+    let size = (rect.size().width as i32, rect.size().height as i32);
+    let mut surface = surfaces::raster_n32_premul(size).unwrap();
+    let canvas = surface.canvas();
+    canvas.draw_str(&txt, (mrg, rect.size().height - rect.bottom), font, &paint1);
+    let image = surface.image_snapshot();
+    let data = image
+        .encode(
+            &mut surface.direct_context(),
+            EncodedImageFormat::WEBP,
+            Some(0),
+        )
+        .unwrap();
+
+    // Save file.
+    pth.push(&fnt.read().unwrap().variant);
+    pth.set_extension("webp");
+    fs::write(&pth, data.as_bytes())?;
 
     Ok(())
 }
@@ -1202,6 +1296,10 @@ pub fn rc<T>(v: T) -> Arc<RwLock<T>> {
     Arc::new(RwLock::new(v))
 }
 
+pub fn sub_variant(name: String) -> String {
+    name.to_title_case().replace(' ', "")
+}
+
 // Request URL: https://fonts.google.com/metadata/fonts/Roboto
 // Request Method:GET
 
@@ -1218,11 +1316,12 @@ pub fn rc<T>(v: T) -> Arc<RwLock<T>> {
 
 /// ![Google Fonts](https://www.gstatic.com/images/icons/material/apps/fonts/1x/catalog/checkout/google_web.png=w200)
 
-pub const METADATA_LIST_URL: &str = "https://fonts.google.com/metadata/fonts";
-
 /// Get a metadata list for font families.
 pub fn get_family_metadata_list(cli: &Client) -> Result<Vec<FamilyMetadata>> {
-    let txt = cli.get(METADATA_LIST_URL).send()?.text()?;
+    let txt = cli
+        .get("https://fonts.google.com/metadata/fonts")
+        .send()?
+        .text()?;
     // let mut pth = dirs::document_dir().unwrap();
     // pth.push("meta.json");
     // fs::write(pth, txt.as_bytes())?;
@@ -1364,14 +1463,8 @@ pub struct Axis {
     pub max: f32,
 }
 
-pub const FILE_LIST_URL: &str = "https://fonts.google.com/download/list";
-
 pub fn cache_dir() -> PathBuf {
-    let mut pth = dirs::cache_dir().unwrap();
-    pth.push("google-fonts");
-    pth.push("gen");
-
-    pth
+    CACHE_DIR.clone()
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1448,11 +1541,11 @@ impl Fam {
         ret
     }
 
-    /// Get a file list for font families.
+    /// Get a file list for the font family.
     pub fn get_file_list(&self, cli: &Client) -> Result<Manifest> {
         // Create file path.
         let mut pth = cache_dir();
-        pth.push(self.name.replace(' ', ""));
+        pth.push(&format!("{}_file_list", &self.variant));
         pth.set_extension("json");
 
         // Check if the file already exists.
@@ -1467,13 +1560,10 @@ impl Fam {
         }
 
         let txt = cli
-            .get(FILE_LIST_URL)
+            .get("https://fonts.google.com/download/list")
             .query(&[("family", &self.name)])
             .send()?
             .text()?;
-        // let mut pth = dirs::document_dir().unwrap();
-        // pth.push("meta.json");
-        // fs::write(pth, txt.as_bytes())?;
 
         // Trim leading excess characters
         // to allow deserialization.
@@ -1485,16 +1575,6 @@ impl Fam {
             }
         }
 
-        // Create the cache directory if necessary.
-        // Get the directory part of the path.
-        if let Some(directory) = pth.parent() {
-            // Check if the directory exists.
-            if !directory.exists() {
-                // Create the directory and any missing parent directories.
-                fs::create_dir_all(directory).unwrap();
-            }
-        }
-
         // Write the data to disk for caching.
         // eprintln!("writing {:?}", &pth);
         fs::write(pth, txt)?;
@@ -1503,6 +1583,50 @@ impl Fam {
         let ret: FamilyFileList = serde_json::from_str(txt)?;
 
         Ok(ret.manifest)
+    }
+
+    /// Get metadata detail for the font family.
+    pub fn get_metadata_detail(&self, cli: &Client) -> Result<FamilyMetadataDetail> {
+        // Create file path.
+        let mut pth = cache_dir();
+        pth.push(&format!("{}_meta", &self.variant));
+        pth.set_extension("json");
+
+        // Check if the file already exists.
+        if pth.exists() {
+            // Load the file.
+            let fle = File::open(pth)?;
+            let rdr = BufReader::new(fle);
+
+            // Deserialize the JSON into a struct.
+            let ret: FamilyMetadataDetail = serde_json::from_reader(rdr)?;
+            return Ok(ret);
+        }
+
+        let url = format!(
+            "https://fonts.google.com/metadata/fonts/{}",
+            self.name.replace(' ', "+")
+        );
+        let txt = cli.get(url).send()?.text()?;
+
+        // Trim leading excess characters
+        // to allow deserialization.
+        //  ")]}'\n{\n
+        let mut txt: &str = txt.as_ref();
+        if let Some(idx) = txt.find('{') {
+            if idx != 0 {
+                txt = &txt[idx..];
+            }
+        }
+
+        // Write the data to disk for caching.
+        // eprintln!("writing {:?}", &pth);
+        fs::write(pth, txt)?;
+
+        // Deserialize JSON to struct.
+        let ret: FamilyMetadataDetail = serde_json::from_str(txt)?;
+
+        Ok(ret)
     }
 }
 
@@ -1530,6 +1654,51 @@ impl Fnt {
             suffix
         )
         .replace(' ', "_")
+    }
+
+    /// Get sample text from network or cache.
+    pub fn get_sampletext(&self, cli: &Client) -> Result<String> {
+        // Create file path.
+        let mut pth = cache_dir();
+        pth.push(format!("{}_sampletext", &self.variant));
+        pth.set_extension("json");
+
+        // Load cached file if exists.
+        if pth.exists() {
+            let fle = File::open(pth)?;
+            let rdr = BufReader::new(fle);
+            let ret: FamilySampleText = serde_json::from_reader(rdr)?;
+            return Ok(ret.sample_text.txt());
+        }
+
+        // Get the sample text from the network.
+        let txt = cli
+            .get("https://fonts.google.com/sampletext")
+            .query(&[
+                ("family", self.fam.read().unwrap().name.as_str()),
+                // ("paragraphOnly", "true"),
+            ])
+            .send()?
+            .text()?;
+
+        // Trim leading excess characters
+        // to allow deserialization.
+        //  ")]}'\n{\n
+        let mut txt: &str = txt.as_ref();
+        if let Some(idx) = txt.find('{') {
+            if idx != 0 {
+                txt = &txt[idx..];
+            }
+        }
+
+        // Write the data to disk for caching.
+        // eprintln!("writing {:?}", &pth);
+        fs::write(pth, txt)?;
+
+        // Deserialize JSON to struct.
+        let ret: FamilySampleText = serde_json::from_str(txt)?;
+
+        Ok(ret.sample_text.txt())
     }
 
     /// Get the font data from network or cache.
@@ -1588,4 +1757,61 @@ impl Fnt {
             vec![STATIC.into()]
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FamilyMetadataDetail {
+    family: String,
+    display_name: Option<String>,
+    coverage: HashMap<String, String>,
+    description: String,
+    languages: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GlyphGroup {
+    name: String,
+    glyphs: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SampleText {
+    masthead_full: String,
+    masthead_partial: String,
+    styles: String,
+    tester: String,
+    poster_sm: Option<String>,
+    poster_md: Option<String>,
+    poster_lg: Option<String>,
+    languages: Vec<String>,
+}
+impl SampleText {
+    pub fn txt(&self) -> String {
+        self.styles.clone()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FamilySampleText {
+    glyph_groups: Vec<GlyphGroup>,
+    sample_text: SampleText,
+}
+
+lazy_static! {
+    static ref CACHE_DIR: PathBuf = {
+        let mut pth = dirs::cache_dir().expect("Failed to get cache directory");
+        pth.push("google-fonts");
+        pth.push("gen");
+
+        // Create the directory and any missing parent directories if it doesn't exist.
+        if !pth.exists() {
+            fs::create_dir_all(&pth).expect("Failed to create cache directory");
+        }
+
+        pth
+    };
 }

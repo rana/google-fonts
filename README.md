@@ -2,7 +2,7 @@
 
 Download and cache TTF fonts from Google.
 
-`11,689` fonts with `1,708` font families.
+`11,689` fonts and `1,708` font families.
 
 Similar to [Downloadable Fonts](https://developer.android.com/develop/ui/views/text-and-emoji/downloadable-fonts) in Android Studio, and [Web Fonts](https://developers.google.com/fonts/docs/developer_api) Google API.
 
@@ -43,12 +43,14 @@ fn main() {
 
 `full` is the default feature.
 
-Variable font technology is newer, more flexible, and provides style variations in one or two files. Static font technology uses more font files for each style variation. A majority of the fonts are in the `static` feature.
+Variable font technology is newer, more flexible, and provides style variations in one or two files. Static font technology uses more font files to accomplish the same thing. A majority of the fonts are in the `static` feature. 
+
+Prefer the `variable` feature when possible.
 
 Enable the `variable` feature to significantly reduce build time and crate size.
 
 # Doc comment font images
 
-View font images from doc comments.
+View font images from docs.
 
 ![tooltip](imgs/tooltip.png)

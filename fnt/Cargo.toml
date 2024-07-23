@@ -1,25 +1,15 @@
 [package]
 name = "google-fonts"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
-keywords = [
-    "font",
-    "google",
-    "graphics",
-    "true-type",
-    "ttf",
-]
-categories = [
-    "api-bindings",
-    "graphics",
-    "text-processing",
-    "rendering",
-]
 authors = ["Rana Ian"]
-repository = "https://github.com/rana/google-fonts"
-license = "MIT"
-readme = "../README.md"
 description = "Download and cache TTF fonts from Google."
+documentation = "https://docs.rs/google-fonts"
+readme = "../README.md"
+keywords = ["font", "google", "graphics", "true-type", "ttf"]
+categories = ["api-bindings", "graphics", "text-processing", "rendering"]
+license = "MIT"
+repository = "https://github.com/rana/google-fonts"
 
 [dependencies]
 dirs = "5.0.1"
@@ -54,7 +44,19 @@ crate-type = ["lib"]
 required-features = []
 
 [[example]]
-path = "examples/main.rs"
-name = "main"
+path = "examples/download.rs"
+name = "download"
+edition = "2021"
+required-features = ["full"]
+
+[[example]]
+path = "examples/enumerate.rs"
+name = "enumerate"
+edition = "2021"
+required-features = []
+
+[[example]]
+path = "examples/serde.rs"
+name = "serde"
 edition = "2021"
 required-features = []
