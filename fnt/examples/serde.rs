@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 fn main() {
     let doc1 = Doc {
-        font: Font::LemonadaRegular,
+        font: Font::DomineVariable,
         text: "Hello, Doc!".into(),
     };
     let json_str = serde_json::to_string(&doc1).unwrap();
