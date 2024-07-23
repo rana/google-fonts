@@ -235,7 +235,7 @@ pub const ID_INCREMENT: u32 = 1000;
 /// An _enumeration_ of [Google font](https://fonts.google.com) families.
 /// 
 /// A font family may have one or more fonts with different styles and sizes.
-#[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+#[derive(Debug, Display, Clone, Copy, Hash, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
 #[repr(u32)] // for `mem::transmute`
 "#);
     buf.push_str(&format!("pub enum {} {{\n", FAMILY));
@@ -444,7 +444,7 @@ use std::fs;
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
 
 /// An _enumeration_ of [Google fonts](https://fonts.google.com).
-#[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+#[derive(Debug, Display, Clone, Copy, Hash, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
 #[repr(u32)] // for `mem::transmute`
 pub enum Font {
 "#);
@@ -711,7 +711,7 @@ use crate::font::Font;
 /// An _enumeration_ of font categories.
 /// 
 /// A font has one category.
-#[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+#[derive(Debug, Display, Clone, Copy, Hash, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
 "#);
     buf.push_str(&format!("pub enum {} {{\n", CATEGORY));
     for cat in cats.iter() {
@@ -824,7 +824,7 @@ use crate::font::Font;
 /// An _enumeration_ of font subsets.
 /// 
 /// A font has one or more subsets.
-#[derive(Debug, Display, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
+#[derive(Debug, Display, Clone, Copy, Hash, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize, EnumCount, EnumIter, EnumString, AsRefStr)]
 "#);
     buf.push_str(&format!("pub enum {} {{\n", SUBSET));
     for sub in subs.iter() {
