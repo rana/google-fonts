@@ -47,7 +47,7 @@ Variable font technology is newer, more flexible, and provides style variations 
 
 Prefer the `variable` feature when possible.
 
-Enable the `variable` feature to significantly improve build time, crate size, and rust-analyzer performance.
+Enable `variable` to significantly improve build time, crate size, and rust-analyzer performance.
 
 # Doc comment font images
 
