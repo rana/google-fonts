@@ -6,6 +6,7 @@ Rust library for downloading and caching Google Fonts
   - Offers flexible API for font retrieval with caching options
   - Includes configurable features for optimizing build time and crate size
   - Similar functionality to [Android Studio's Downloadable Fonts](https://developer.android.com/develop/ui/views/text-and-emoji/downloadable-fonts) and [Google's Web Fonts API](https://developers.google.com/fonts/docs/developer_api)
+  - Published crate available on crates.io: https://crates.io/crates/google-fonts
 
 # Example
 
