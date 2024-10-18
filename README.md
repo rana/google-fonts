@@ -1,10 +1,11 @@
 # google-fonts
 
-Download and cache TTF fonts from Google.
-
-`11,689` fonts and `1,708` font families.
-
-Similar to Android Studio [Downloadable Fonts](https://developer.android.com/develop/ui/views/text-and-emoji/downloadable-fonts), and Google API [Web Fonts](https://developers.google.com/fonts/docs/developer_api).
+Rust library for downloading and caching Google Fonts
+  - Provides access to `11,689` fonts and `1,708` font families
+  - Supports both variable and static font technologies
+  - Offers flexible API for font retrieval with caching options
+  - Includes configurable features for optimizing build time and crate size
+  - Similar functionality to [Android Studio's Downloadable Fonts](https://developer.android.com/develop/ui/views/text-and-emoji/downloadable-fonts) and [Google's Web Fonts API](https://developers.google.com/fonts/docs/developer_api)
 
 # Example
 
